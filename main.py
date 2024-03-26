@@ -9,15 +9,13 @@ firebase_admin.initialize_app(cred, {"databaseURL": "https://sekeyrity-c3b78-def
 
 
 #adicionar um novo user à base de dados 
-def create_new_user(user_name):
-
-    
+def create_new_user(user_name, key_1_acess, key_2_acess, key_3_acess, key_4_acess):
 
     new_user = {
-        "key_1": True,
-        "key_2": True,
-        "key_3": True,
-        "key_4": True
+        "key_1": key_1_acess,
+        "key_2": key_2_acess,
+        "key_3": key_3_acess,
+        "key_4": key_4_acess
     }
 
     #adicionar novo user
@@ -55,4 +53,4 @@ def delete_user(user_name):
 ref_root = db.reference("/")
 ref_users= db.reference('users')
 
-delete_user("maria")
+create_new_user("Mike", True, True, False, False)
