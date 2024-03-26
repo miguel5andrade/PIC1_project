@@ -9,7 +9,7 @@ firebase_admin.initialize_app(cred, {"databaseURL": "https://sekeyrity-c3b78-def
 
 
 #adicionar um novo user à base de dados 
-def create_new_user(user_name, key_1_acess, key_2_acess, key_3_acess, key_4_acess):
+def create_new_user(user_name, email, key_1_acess, key_2_acess, key_3_acess, key_4_acess):
 
     #antes de registarmos temos de ver se já esta registado
     
@@ -21,6 +21,7 @@ def create_new_user(user_name, key_1_acess, key_2_acess, key_3_acess, key_4_aces
         return
 
     new_user = {
+        "e-mail": email,
         "key-01": key_1_acess,
         "key-02": key_2_acess,
         "key-03": key_3_acess,
@@ -39,7 +40,7 @@ def create_new_user(user_name, key_1_acess, key_2_acess, key_3_acess, key_4_aces
     # Atualiza o valor de num_of_users na base de dados
     ref_root.child("num_of_users").set(num_of_users)
 
-    
+    print(f"User '{user_name}' registered.")
     return  
 
 #apaga user da base de dados
@@ -93,4 +94,4 @@ def change_access(user_name, key_id, new_value):
 ref_root = db.reference("/")
 ref_users= db.reference('users')
 
-change_access("jony", "key-03", True)
+create_new_user("miguel andrade", "miguel.andrade.net@gmail.com", True, True, False, False)
