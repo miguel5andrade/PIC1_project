@@ -340,13 +340,27 @@ def have_key(user_name):
         if DEBUG >= 2:
             lcd.message('Erro: \nin data base')
         return 0
+    
+def key_gone(key_number, user_name):
+
+    # Verifica se o usuário existe
+    user_exists = ref_users.child(user_name).get()
+    print(key_number)
+    if user_exists is not None:
+        # Se o usuário existir, atualize o valor do acesso especificado
+        ref_users.child(user_name).update({"have_key": key_number})
+        print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
+    else:
+        # Se o usuário não existir, exiba uma mensagem
+        print(f"Usuário '{user_name}' não existe.")
+
 
 """ MAIN """
 try:
     ## inicializações
     servo1.min() 
     arg = "default"
-    thread_delete_after_20min = threading.Thread(target=delete_user, args= (arg,))
+    
 
     print("Setup done!")
     lcd.message('Setup\ndone!')
@@ -393,6 +407,7 @@ try:
                 key_return = have_key(user_name)
                 if key_return != 0:
                     strore_key(key_return)
+                    key_gone(0, user_name)
                     
                     loop_flag = 0
                 else:
@@ -411,6 +426,7 @@ try:
 
                     password = random.randint(1, 10000)
                     create_new_user("default", "default@gmail.com", card_id, password, False, False, False, False)
+                    thread_delete_after_20min = threading.Thread(target=delete_user, args= (arg,))
                     thread_delete_after_20min.start()
 
                     lcd.clear()
@@ -470,6 +486,7 @@ try:
 
             if access == True:
                 open_gate()
+                key_gone(number_key, user_name)
 
             number_key_list.clear()
             loop_flag = 0
