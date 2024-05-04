@@ -9,6 +9,7 @@ from gpiozero import Servo
 # RFID redear
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
+import queue
 # LCD
 import Adafruit_CharLCD as LCD
 # DATABASE
@@ -16,13 +17,19 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import random 
+# threads
 import threading
+from multiprocessing import Process, Value, Array
 
 
 """global variables"""
 DEBUG = 1           # 0 - sem deug , 1 - prints no terminal, 2 - prints no LCD e no terminal
 loop_flag = 0       # 0 - primeirar iteração, 1 - escrever no teclado, 2 - à espera da tag rfid
 number_key_list = []
+global while_timer
+while_timer = 0     # 0 - not runing, 1 - runing
+global key_id
+key_id = -1
 
 
 """Setup"""
@@ -83,6 +90,7 @@ firebase_admin.initialize_app(cred, {"databaseURL": "https://sekeyrity-c3b78-def
 #referências
 ref_root = db.reference("/")
 ref_users= db.reference('users')
+ref_keys= db.reference('keys')
 
 """General"""
 def list_to_integer(list_int):
@@ -186,7 +194,8 @@ def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_aces
 
     #se ja estiver registado bazamos
     if user_exists is not None:
-        print(f"User '{user_name}' already registered, failure.")
+        if DEBUG == 1:
+            print(f"User '{user_name}' already registered, failure.")
         return
 
     new_user = {
@@ -213,7 +222,8 @@ def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_aces
     # Atualiza o valor de num_of_users na base de dados
     ref_root.child("num_of_users").set(num_of_users)
 
-    print(f"User '{user_name}' registered.")
+    if DEBUG == 1:
+        print(f"User '{user_name}' registered.")
     return
 
 #apaga user da base de dados
@@ -228,7 +238,9 @@ def delete_user(user_name):
     if user_exists is not None:
         # Se o usuário existir, exclua-o
         ref_users.child(user_name).delete()
-        print(f"User '{user_name}' deleted.")
+
+        if DEBUG == 1:
+            print(f"User '{user_name}' deleted.")
 
         # Obtém o valor atual de num_of_users
         num_of_users = ref_root.child("num_of_users").get()
@@ -238,8 +250,9 @@ def delete_user(user_name):
         ref_root.child("num_of_users").set(num_of_users)
 
     else:
-        # Se o usuário não existir, exiba uma mensagem
-        print(f"User '{user_name}' not registered, can't delete.")
+        if DEBUG == 1:
+            # Se o usuário não existir, exiba uma mensagem
+            print(f"User '{user_name}' not registered, can't delete.")
 
     return
 
@@ -252,10 +265,13 @@ def change_access(user_name, key_id, new_value):
     if user_exists is not None:
         # Se o usuário existir, atualize o valor do acesso especificado
         ref_users.child(user_name).update({key_id: new_value})
-        print(f"Valor de acesso '{key_id}' do usuário '{user_name}' alterado para '{new_value}'.")
+
+        if DEBUG == 1:
+            print(f"Valor de acesso '{key_id}' do usuário '{user_name}' alterado para '{new_value}'.")
     else:
-        # Se o usuário não existir, exiba uma mensagem
-        print(f"Usuário '{user_name}' não existe.")
+        if DEBUG == 1:
+            # Se o usuário não existir, exiba uma mensagem
+            print(f"Usuário '{user_name}' não existe.")
 
     return
 
@@ -318,7 +334,8 @@ def check_access(user_name, number_key):
 
 
     else:
-        print("ERRO: no data in data base")
+        if DEBUG == 1:
+            print("ERRO: no data in data base")
         if DEBUG >= 2:
             lcd.message('Erro: \nin data base')
         return 0
@@ -334,10 +351,10 @@ def have_key(user_name):
             lcd.message('Return key ')
             lcd.message(str(key))
             sleep(2)
-            lcd.clear()
         return key
     else:
-        print("ERRO: no data in data base")
+        if DEBUG == 1:
+            print("ERRO: no data in data base")
         if DEBUG >= 2:
             lcd.message('Erro: \nin data base')
         return 0
@@ -346,14 +363,60 @@ def key_gone(key_number, user_name):
 
     # Verifica se o usuário existe
     user_exists = ref_users.child(user_name).get()
-    print(key_number)
+    if DEBUG == 1:
+        print(key_number)
     if user_exists is not None:
         # Se o usuário existir, atualize o valor do acesso especificado
         ref_users.child(user_name).update({"have_key": key_number})
-        print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
+
+        if DEBUG == 1:
+            # devolução de uma chave
+            if key_number == 0:
+                print("Chave devolvida")
+            else:
+                print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
     else:
         # Se o usuário não existir, exiba uma mensagem
         print(f"Usuário '{user_name}' não existe.")
+
+def key_id_to_number(key_id):
+    valid_key = False
+    # Obtém todos os dados do banco de dados
+    data = ref_keys.get()
+
+    if data:
+        for data_keys_name in data:
+            data_keys_id = ref_keys.child(data_keys_name).get()
+            if DEBUG == 1:
+                print("comparing this keys")
+                print(data_keys_id)
+                print(key_id)
+
+            if key_id == data_keys_id:
+                valid_key = True
+                break
+    return valid_key
+
+""" RFID reader """
+def reader_thread(key_id_multi, while_timer_multi):
+
+    # esperar pela chave passar no leitor
+    key_id, text = reader.read()
+    if key_id:
+        key_id_multi.value = key_id
+        while_timer_multi.value = 0 # stops timer thread
+        if DEBUG == 1:
+            print("antes de sair de reader_thread()")
+            print(key_id_multi.value)
+            print(while_timer_multi.value)
+    return
+
+def timer():
+    global while_timer
+
+    while_timer = 0
+    return
+    
 
 
 """ MAIN """
@@ -361,9 +424,11 @@ try:
     ## inicializações
     servo1.min() 
     arg = "default"
+    key_id_multi = Value('i', 0)
+    while_timer_multi = Value('i', 0)
     
-
-    print("Setup done!")
+    if DEBUG == 1:
+        print("Setup done!")
     lcd.message('Setup\ndone!')
     sleep(2)
     lcd.clear()
@@ -407,9 +472,43 @@ try:
             else:
                 key_return = have_key(user_name)
                 if key_return != 0:
-                    strore_key(key_return)
-                    key_gone(0, user_name)
-                    
+                    while_timer = 1
+                    thread_stop_after_2min = threading.Timer(60.0, timer)
+                    thread_stop_after_2min.start()
+
+                    key_id_multi.value = -1
+                    while_timer_multi.value = 1 # stops timer thread
+                    thread_reader = Process(target=reader_thread, args=(key_id_multi, while_timer_multi))
+                    thread_reader.start()
+
+                    while(1):
+                        if key_id_multi.value != -1:
+                            if DEBUG == 1:
+                                print("read somthing")
+                                print(key_id_multi.value)
+
+                            thread_stop_after_2min.cancel()
+
+                            if key_id_to_number(key_id_multi.value):
+                                lcd.clear()
+                                strore_key(key_return)
+                                key_gone(0, user_name)
+
+                                lcd.message('Thanks')
+                                sleep(3)
+                                lcd.clear()
+                            else:
+                                lcd.message('Invalid key')
+                                sleep(3)
+                                lcd.clear()
+                            break
+                        if while_timer == 0 or while_timer_multi.value == 0:
+                            if DEBUG == 1:
+                                print("time out")
+                                print(key_id)
+                            thread_reader.terminate()
+                            break
+
                     loop_flag = 0
                 else:
                     loop_flag = 3
@@ -497,4 +596,5 @@ try:
 
 ## pára o programa com um Ctrl + c
 except KeyboardInterrupt:
-	print("Programa terminado")
+    if DEBUG == 1:
+	    print("Programa terminado")
