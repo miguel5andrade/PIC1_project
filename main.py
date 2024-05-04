@@ -379,10 +379,12 @@ def key_gone(key_number, user_name):
         # Se o usuário não existir, exiba uma mensagem
         print(f"Usuário '{user_name}' não existe.")
 
-def key_id_to_number(key_id):
+# key_id é o que é lido no leitor e key_nmeber é a nossa numeração[1,2,3,4]
+def key_id_to_number(key_id, key_number):
     valid_key = False
     # Obtém todos os dados do banco de dados
     data = ref_keys.get()
+    i = 1
 
     if data:
         for data_keys_name in data:
@@ -393,8 +395,18 @@ def key_id_to_number(key_id):
                 print(key_id)
 
             if key_id == data_keys_id:
-                valid_key = True
+                if i == key_number:
+                    valid_key = True
+                else:
+                    if DEBUG == 1:
+                        print("Wrong key")
+                    
+                    lcd.clear()
+                    lcd.message('Wrong key')
+                    sleep(2)
+                    lcd.clear()
                 break
+            i = i + 1
     return valid_key
 
 """ RFID reader """
@@ -489,7 +501,7 @@ try:
 
                             thread_stop_after_2min.cancel()
 
-                            if key_id_to_number(key_id_multi.value):
+                            if key_id_to_number(key_id_multi.value, key_return):
                                 lcd.clear()
                                 strore_key(key_return)
                                 key_gone(0, user_name)
