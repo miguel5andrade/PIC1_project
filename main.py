@@ -197,7 +197,8 @@ def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_aces
         "key-02": key_2_acess,
         "key-03": key_3_acess,
         "key-04": key_4_acess,
-        "have_key": 0
+        "have_key": 0,
+        "admin": 0
     }
 
     #adicionar novo user
@@ -331,7 +332,7 @@ def have_key(user_name):
             return 0
         else:
             lcd.message('Return key ')
-            lcd.message(key)
+            lcd.message(str(key))
             sleep(2)
             lcd.clear()
         return key
@@ -468,7 +469,10 @@ try:
                 else:
                     # DELET
                     if key == "*":
-                        number_key_list.pop()
+                        if not number_key_list:
+                            loop_flag = 0
+                        else:
+                            number_key_list.pop()
                     # number
                     else:
                         number_key_list.append(key)
