@@ -12,10 +12,10 @@ Como conectar ao Raspberry pi:
 
 Como correr o programa:
 (no nosso caso temos as libs num virtual environmental)
-  cd Desktop
-  cd PIC
-  source env/bin/activate
-  python3 main.py
+1. cd Desktop
+2. cd PIC
+3. source env/bin/activate
+4. python3 main.py
 
 Como conectar o hardware
 ![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/b59254ac-73ba-43d6-b0ee-8d7a61803ff5)
