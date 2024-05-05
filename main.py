@@ -295,7 +295,7 @@ def check_card_id(user_id):
         if access == 0:
             print("id not registed")
         else:
-            print("id registed")
+            print(f"id registed with user name:'{user_name}'")
 
     if access == 0:
         return 0
@@ -348,9 +348,15 @@ def have_key(user_name):
         if key == 0:
             return 0
         else:
-            lcd.message('Return key ')
-            lcd.message(str(key))
-            sleep(2)
+            lcd.message('You have this \nkeys:')
+            n = len(str(key))
+            str_key = str(key)
+            for i in range(n):
+                if i != 0:
+                    lcd.message(',')
+                lcd.message(str_key[i])
+                
+            sleep(4)
         return key
     else:
         if DEBUG == 1:
@@ -359,6 +365,7 @@ def have_key(user_name):
             lcd.message('Erro: \nin data base')
         return 0
     
+# insert a flag to know that this user has this key
 def key_gone(key_number, user_name):
 
     # Verifica se o usuário existe
@@ -366,18 +373,51 @@ def key_gone(key_number, user_name):
     if DEBUG == 1:
         print(key_number)
     if user_exists is not None:
-        # Se o usuário existir, atualize o valor do acesso especificado
-        ref_users.child(user_name).update({"have_key": key_number})
+        # retirar chave
+        have_key = ref_users.child(user_name).child("have_key").get()
+        if have_key == 0:
+            # Se o usuário existir, atualize o valor do acesso especificado
+            ref_users.child(user_name).update({"have_key": key_number})
+        else:
+            have_key = int(str(have_key) + str(key_number))
+            ref_users.child(user_name).update({"have_key": have_key})
 
         if DEBUG == 1:
-            # devolução de uma chave
-            if key_number == 0:
-                print("Chave devolvida")
-            else:
-                print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
+            print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
     else:
         # Se o usuário não existir, exiba uma mensagem
         print(f"Usuário '{user_name}' não existe.")
+
+# remove a flag to know that this user no longer has this key
+def key_back(key_number,user_name):
+    # Verifica se o usuário existe
+    user_exists = ref_users.child(user_name).get()
+    if user_exists is not None:
+        # retirar chave
+        have_key = ref_users.child(user_name).child("have_key").get()
+
+        # meter a flag a zero caso o utilizador não tenha mais chaves
+        if int(have_key) < 10:
+            ref_users.child(user_name).update({"have_key": 0})
+
+            if DEBUG == 1:
+                print("have_key update to 0!!")
+
+        # retirar o numero da chave devolvida da flag
+        else:
+            buff = ""
+            str_have_key = str(have_key)
+            n = len(str_have_key)
+            for i in range(n):
+                if str_have_key[i] != str(key_number):
+                    buff = buff + str_have_key[i]
+                
+            have_key = int(buff)
+            ref_users.child(user_name).update({"have_key": have_key})
+
+            if DEBUG == 1:
+                print(f"have_key update to '{buff}'!!")
+
 
 # key_id é o que é lido no leitor e key_nmeber é a nossa numeração[1,2,3,4]
 def key_id_to_number(key_id, key_number):
@@ -390,14 +430,19 @@ def key_id_to_number(key_id, key_number):
         for data_keys_name in data:
             data_keys_id = ref_keys.child(data_keys_name).get()
             if DEBUG == 1:
-                print("comparing this keys")
-                print(data_keys_id)
-                print(key_id)
+                print("Comparing this keys")
+                print(f"\t'{data_keys_id}'")
+                print(f"\t'{key_id}'")
 
             if key_id == data_keys_id:
-                if i == key_number:
-                    valid_key = True
-                else:
+                str_key_nember = str(key_number)
+                n = len(str_key_nember)
+                for j in range(n):
+                    if i == int(str_key_nember[j]):
+                        valid_key = True
+                        return i
+
+                if valid_key != True:
                     if DEBUG == 1:
                         print("Wrong key")
                     
@@ -407,7 +452,23 @@ def key_id_to_number(key_id, key_number):
                     lcd.clear()
                 break
             i = i + 1
-    return valid_key
+    return 0
+
+def requested_key(key_number, user_name):
+    # Verifica se o usuário existe
+    user_exists = ref_users.child(user_name).get()
+    if user_exists is not None:
+        # retirar chave
+        have_key = ref_users.child(user_name).child("have_key").get()
+
+        if have_key != 0:
+            str_have_key = str(have_key)
+            n = len(str_have_key)
+            for i in range(n):
+                if str_have_key[i] == str(key_number):
+                    return True
+
+    return False
 
 """ RFID reader """
 def reader_thread(key_id, while_timer_multi):
@@ -418,9 +479,11 @@ def reader_thread(key_id, while_timer_multi):
         key_id.value = id
         while_timer_multi.value = 0 # stops timer thread
         if DEBUG == 1:
-            print("antes de sair de reader_thread()")
-            print(key_id.value)
-            print(while_timer_multi.value)
+            print("Antes de sair de reader_thread()")
+            print(f"\tkey_id.value:'{key_id.value}'")
+            print(f"\twhile_timer_multi.value:'{while_timer_multi.value}'")
+            print(f"\tid:'{id}'")
+
     return
 
 def timer():
@@ -440,6 +503,9 @@ try:
     
     if DEBUG == 1:
         print("Setup done!")
+    
+    lcd.clear()
+    lcd.clear()
     lcd.message('Setup\ndone!')
     sleep(2)
     lcd.clear()
@@ -455,6 +521,9 @@ try:
             if card_id:
                 loop_flag = 1
             lcd.clear()
+            
+            if  DEBUG == 1:
+                print(f"Card ID: '{card_id}")
 
         # descobre o user_name, se não existir regista ou verifica se tem chaves para devolver
         if loop_flag == 1:
@@ -485,54 +554,91 @@ try:
             else:
                 key_return = have_key(user_name) # verificação se o user tem uma chave
                 if key_return != 0:
+                    lcd.clear()
+                    lcd.clear()
+                    lcd.message('Return[green]\n')
+                    lcd.message('Request[red]\n')
                     # timeout thread
                     while_timer = 1
                     thread_stop_after_1min = threading.Timer(60.0, timer)
                     thread_stop_after_1min.start()
 
-                    # thread de leitura das chaves por RFID
-                    key_id.value = -1
-                    while_timer_multi.value = 1 # flag to stop timer thread
-                    thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
-                    thread_reader.start()
-
                     while(1):
-                        if key_id.value != -1:
-                            if DEBUG == 1:
-                                print("read somthing")
-                                print(key_id.value)
-
-                            thread_stop_after_1min.cancel()
-
-                            if key_id_to_number(key_id.value, key_return):
-                                lcd.clear()
-                                strore_key(key_return)
-                                key_gone(0, user_name)
-
-                                lcd.message('Thanks')
-                                sleep(3)
-                                lcd.clear()
-                            else:
-                                lcd.message('Invalid key')
-                                sleep(3)
-                                lcd.clear()
-                            break
-                        if while_timer == 0 or while_timer_multi.value == 0:
-                            if DEBUG == 1:
-                                print("time out")
-                                print(key_id)
-
+                        key = read_keypad()
+                        if key != "nada":
                             lcd.clear()
-                            lcd.message('Timeout')
-                            sleep(2)
-                            lcd.clear()
+                            thread_stop_after_1min.cancel() # stop timeout timer
 
-                            thread_reader.terminate()
-                            break
+                            # quer devolver uma chave
+                            if key == "#":
+                                if DEBUG == 1:
+                                    print("read: # (Return key)")
 
-                    loop_flag = 0
+                                lcd.clear()
+                                lcd.clear()
+                                lcd.message('Insert the key \nto be returned')
+                                 # timeout thread
+                                while_timer = 1
+                                thread_stop_after_1min = threading.Timer(60.0, timer)
+                                thread_stop_after_1min.start()
+
+                                # thread de leitura das chaves por RFID
+                                key_id.value = -1
+                                while_timer_multi.value = 1 # flag to stop timer thread
+                                thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
+                                thread_reader.start()
+
+                                while(1):
+                                    if key_id.value != -1:
+                                        if DEBUG == 1:
+                                            print("read somthing")
+                                            print(key_id.value)
+
+                                        thread_stop_after_1min.cancel()
+
+                                        key_number = key_id_to_number(key_id.value, key_return)
+
+                                        if key_number != 0:
+                                            lcd.clear()
+                                            strore_key(key_return)
+                                            key_back(key_number, user_name)
+
+                                            lcd.message('Thanks')
+                                            sleep(3)
+                                            lcd.clear()
+                                        else:
+                                            lcd.clear()
+                                            lcd.message('Invalid key')
+                                            sleep(3)
+                                            lcd.clear()
+                                        break
+                                    if while_timer == 0 or while_timer_multi.value == 0:
+                                        if DEBUG == 1:
+                                            print("time out")
+                                            print(key_id)
+
+                                        lcd.clear()
+                                        lcd.message('Timeout')
+                                        sleep(2)
+                                        lcd.clear()
+
+                                        thread_reader.terminate()
+                                        break
+
+
+                                loop_flag = 0
+                                break
+
+                            # retirar chave 
+                            elif key == "*":
+                                if DEBUG == 1:
+                                    print("read: * (levar chave)")
+
+                                loop_flag = 3
+                                break
                 else:
                     loop_flag = 3
+
 
         # não está registado -> registar ou não
         if loop_flag == 2:
@@ -566,10 +672,12 @@ try:
                         lcd.clear()
 
                         loop_flag = 0
+                        break
 
                     # não quer se registar 
                     elif key == "*":
                         loop_flag = 0
+                        break
 
                 elif while_timer == 0:
                     lcd.clear()
@@ -603,22 +711,47 @@ try:
 
                     # ENTER
                     if key == "#":
-                        number_key = list_to_integer(number_key_list)
-                        if is_key_number(number_key) == 0:
+                        if not number_key_list:
                             lcd.clear()
-                            lcd.message('Key number [1;4]')
+                            lcd.message('Chose a key')
                             sleep(2)
                             lcd.clear()
-                            number_key_list.clear()
-                            loop_flag = 3
+                            lcd.message("Digited:\n")
+                            lcd.message(number_key_list)
                         else:
-                            loop_flag = 5
-                            lcd.clear()
+                            number_key = list_to_integer(number_key_list)
+                            if DEBUG == 1:
+                                print(f"key number: '{number_key}'")
+
+                            if is_key_number(number_key) == 0 :
+                                lcd.clear()
+                                lcd.message('Key number [1;4]')
+                                sleep(2)
+                                lcd.clear()
+                                number_key_list.clear()
+                                loop_flag = 3
+                                break
+                            elif requested_key(number_key, user_name):
+                                if DEBUG == 1:
+                                    print("O utilizador já tem esta chave")
+
+                                lcd.clear()
+                                lcd.message('You already have\nthis key')
+                                sleep(2)
+                                lcd.clear()
+                                number_key_list.clear()
+                                loop_flag = 3
+                                break
+                            else:
+                                loop_flag = 5
+                                lcd.clear()
+                                break
                     else:
                         # DELET
                         if key == "*":
                             if not number_key_list:
                                 loop_flag = 0
+                                break
                             else:
                                 number_key_list.pop()
                         # number
