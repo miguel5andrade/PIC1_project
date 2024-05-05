@@ -190,10 +190,10 @@ def is_key_number(number):
 def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_acess, key_3_acess, key_4_acess):
 
     #antes de registarmos temos de ver se já esta registado
-    user_exists = ref_users.child(user_name).get()
+    data_password = ref_users.child(user_name).child("password").get()
 
     #se ja estiver registado bazamos
-    if user_exists is not None:
+    if password == data_password:
         if DEBUG == 1:
             print(f"User '{user_name}' already registered, failure.")
         return
@@ -227,15 +227,15 @@ def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_aces
     return
 
 #apaga user da base de dados
-def delete_user(user_name):
+def delete_user(user_name, password):
     
-    sleep(1200)
+    # sleep(90)
     #antes de dar-mos delete temos de verificar se o user existe ou não
 
     # Verifica se o usuário existe
-    user_exists = ref_users.child(user_name).get()
+    data_password = ref_users.child(user_name).child("password").get()
 
-    if user_exists is not None:
+    if password == data_password:
         # Se o usuário existir, exclua-o
         ref_users.child(user_name).delete()
 
@@ -410,16 +410,16 @@ def key_id_to_number(key_id, key_number):
     return valid_key
 
 """ RFID reader """
-def reader_thread(key_id_multi, while_timer_multi):
+def reader_thread(key_id, while_timer_multi):
 
     # esperar pela chave passar no leitor
-    key_id, text = reader.read()
-    if key_id:
-        key_id_multi.value = key_id
+    id, text = reader.read()
+    if id:
+        key_id.value = id
         while_timer_multi.value = 0 # stops timer thread
         if DEBUG == 1:
             print("antes de sair de reader_thread()")
-            print(key_id_multi.value)
+            print(key_id.value)
             print(while_timer_multi.value)
     return
 
@@ -434,10 +434,9 @@ def timer():
 """ MAIN """
 try:
     ## inicializações
-    servo1.min() 
-    arg = "default"
-    key_id_multi = Value('i', 0)
-    while_timer_multi = Value('i', 0)
+    servo1.min()        # servos
+    key_id = Value('i', 0)    # argumento para a multithread de leitura chaves
+    while_timer_multi = Value('i', 0)   # argumento para a multithread de leitura de chaver
     
     if DEBUG == 1:
         print("Setup done!")
@@ -447,7 +446,7 @@ try:
 
     ## LOOP
     while True:
-        # leitura de cartão e registo caso o cartão não estiver na base de dados
+        # leitura de cartão do utilizador
         if loop_flag == 0:
             lcd.message('Scan your \ncard')
             sleep(0.5)
@@ -457,7 +456,7 @@ try:
                 loop_flag = 1
             lcd.clear()
 
-        # descobre o user_name, se não existir regista e verifica se tem chaves para devolver
+        # descobre o user_name, se não existir regista ou verifica se tem chaves para devolver
         if loop_flag == 1:
             # se o id não existir na base de dados temos de registalo
             user_name = check_card_id(card_id)
@@ -477,31 +476,35 @@ try:
                 sleep(2)
                 lcd.clear()
 
-                lcd.message('Forget key? Wait \n20min')
+                lcd.message('Forget key? Wait \n10min')
                 sleep(2)
                 lcd.clear()
+
+                loop_flag = 0
             # se existir pode querer devolver uma chave ou retirar
             else:
-                key_return = have_key(user_name)
+                key_return = have_key(user_name) # verificação se o user tem uma chave
                 if key_return != 0:
+                    # timeout thread
                     while_timer = 1
-                    thread_stop_after_2min = threading.Timer(60.0, timer)
-                    thread_stop_after_2min.start()
+                    thread_stop_after_1min = threading.Timer(60.0, timer)
+                    thread_stop_after_1min.start()
 
-                    key_id_multi.value = -1
-                    while_timer_multi.value = 1 # stops timer thread
-                    thread_reader = Process(target=reader_thread, args=(key_id_multi, while_timer_multi))
+                    # thread de leitura das chaves por RFID
+                    key_id.value = -1
+                    while_timer_multi.value = 1 # flag to stop timer thread
+                    thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
                     thread_reader.start()
 
                     while(1):
-                        if key_id_multi.value != -1:
+                        if key_id.value != -1:
                             if DEBUG == 1:
                                 print("read somthing")
-                                print(key_id_multi.value)
+                                print(key_id.value)
 
-                            thread_stop_after_2min.cancel()
+                            thread_stop_after_1min.cancel()
 
-                            if key_id_to_number(key_id_multi.value, key_return):
+                            if key_id_to_number(key_id.value, key_return):
                                 lcd.clear()
                                 strore_key(key_return)
                                 key_gone(0, user_name)
@@ -518,6 +521,12 @@ try:
                             if DEBUG == 1:
                                 print("time out")
                                 print(key_id)
+
+                            lcd.clear()
+                            lcd.message('Timeout')
+                            sleep(2)
+                            lcd.clear()
+
                             thread_reader.terminate()
                             break
 
@@ -525,34 +534,54 @@ try:
                 else:
                     loop_flag = 3
 
-        # não está registado, registar ou não
+        # não está registado -> registar ou não
         if loop_flag == 2:
+            # timeout thread
+            while_timer = 1
+            thread_stop_after_1min = threading.Timer(60.0, timer)
+            thread_stop_after_1min.start()
 
-            key = read_keypad()
-            if key != "nada":
-                lcd.clear()
-                # quer se registar
-                if key == "#":
-                    lcd.message('Open our app and\ninsert this key')
-                    sleep(4)
-
-                    password = random.randint(1, 10000)
-                    create_new_user("default", "default@gmail.com", card_id, password, False, False, False, False)
-                    thread_delete_after_20min = threading.Thread(target=delete_user, args= (arg,))
-                    thread_delete_after_20min.start()
-
+            while(1):
+                key = read_keypad()
+                if key != "nada":
                     lcd.clear()
-                    lcd.message('Key:\n')
-                    #password_text = split_integer_to_list(password)
-                    lcd.message(str(password))
-                    sleep(15)
+                    thread_stop_after_1min.cancel() # stop timeout timer
+
+                    # quer se registar
+                    if key == "#":
+                        lcd.message('Open our app and\ninsert this key')
+                        sleep(4)
+
+                        password = random.randint(1, 10000)
+                        user_name = "default" + str(password)     # argumeto para a thread de registos
+                        create_new_user(user_name, "default@gmail.com", card_id, password, False, False, False, False)
+                        thread_delete_after_10min = threading.Timer(600.0, delete_user, args= (user_name,password))
+                        thread_delete_after_10min.start()
+
+                        lcd.clear()
+                        lcd.message('Key:\n')
+                        #password_text = split_integer_to_list(password)
+                        lcd.message(str(password))
+                        sleep(15)
+                        lcd.clear()
+
+                        loop_flag = 0
+
+                    # não quer se registar 
+                    elif key == "*":
+                        loop_flag = 0
+
+                elif while_timer == 0:
                     lcd.clear()
+                    lcd.message('Timeout')
+                    sleep(2)
+                    lcd.clear()
+                    if DEBUG == 1:
+                        print("time out")
+                        print(key_id)
 
                     loop_flag = 0
-
-                # não quer se registar 
-                elif key == "*":
-                    loop_flag = 0
+                    break
 
         # mensagem de inicio do loop de entrega da chave
         elif loop_flag == 3:
@@ -562,38 +591,58 @@ try:
         
         # ask for key number
         elif loop_flag == 4:
-            key = read_keypad()
-            if key != "nada":
-                # ENTER
-                if key == "#":
-                    number_key = list_to_integer(number_key_list)
-                    if is_key_number(number_key) == 0:
-                        lcd.clear()
-                        lcd.message('Key number [1;4]')
-                        sleep(2)
-                        lcd.clear()
-                        number_key_list.clear()
-                        loop_flag = 3
-                    else:
-                        loop_flag = 5
-                        lcd.clear()
-                else:
-                    # DELET
-                    if key == "*":
-                        if not number_key_list:
-                            loop_flag = 0
-                        else:
-                            number_key_list.pop()
-                    # number
-                    else:
-                        number_key_list.append(key)
-                    lcd.clear()
-                    lcd.clear()
-                    lcd.message("Digited:\n")
-                    lcd.message(number_key_list)
+            # timeout thread
+            while_timer = 1
+            thread_stop_after_1min = threading.Timer(60.0, timer)
+            thread_stop_after_1min.start()
 
-                if DEBUG == 1:
-                    print(number_key_list)
+            while(1):
+                key = read_keypad()
+                if key != "nada":
+                    thread_stop_after_1min.cancel() # stop timeout timer
+
+                    # ENTER
+                    if key == "#":
+                        number_key = list_to_integer(number_key_list)
+                        if is_key_number(number_key) == 0:
+                            lcd.clear()
+                            lcd.message('Key number [1;4]')
+                            sleep(2)
+                            lcd.clear()
+                            number_key_list.clear()
+                            loop_flag = 3
+                        else:
+                            loop_flag = 5
+                            lcd.clear()
+                    else:
+                        # DELET
+                        if key == "*":
+                            if not number_key_list:
+                                loop_flag = 0
+                            else:
+                                number_key_list.pop()
+                        # number
+                        else:
+                            number_key_list.append(key)
+                        lcd.clear()
+                        lcd.clear()
+                        lcd.message("Digited:\n")
+                        lcd.message(number_key_list)
+
+                    if DEBUG == 1:
+                        print(number_key_list)
+                
+                elif while_timer == 0:
+                    lcd.clear()
+                    lcd.message('Timeout')
+                    sleep(2)
+                    lcd.clear()
+                    if DEBUG == 1:
+                        print("time out")
+                        print(key_id)
+
+                    loop_flag = 0
+                    break
 
         # check access of this key
         elif loop_flag == 5:
