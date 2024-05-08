@@ -91,6 +91,7 @@ firebase_admin.initialize_app(cred, {"databaseURL": "https://sekeyrity-c3b78-def
 ref_root = db.reference("/")
 ref_users= db.reference('users')
 ref_keys= db.reference('keys')
+ref_movement = db.reference('movements')
 
 """General"""
 def list_to_integer(list_int):
@@ -469,6 +470,33 @@ def requested_key(key_number, user_name):
                     return True
 
     return False
+
+
+def register_movement(username, key_id, take_key, return_key):
+    #temos de criar um novo dentro do nó 'movements' onde registamos: o user, o id da chave que levou, se levou ou entregou a chave e um timestamp.
+
+    now = time.localtime()
+    day = str(now.tm_mday).zfill(2)
+    month = str(now.tm_mon).zfill(2)
+    year = str(now.tm_year)
+    hour = str(now.tm_hour).zfill(2)
+    minute = str(now.tm_min).zfill(2)
+    
+    timestamp = f"{day}-{month}-{year} : {hour}-{minute}"
+
+    topic = {
+        "username": username,
+        "key_id": key_id,
+        "take_key": take_key,
+        "return_key": return_key
+    }
+
+    #adiciona novo nó
+    print(timestamp)
+    ref_movement.child(timestamp).set(topic)
+    return
+
+
 
 """ RFID reader """
 def reader_thread(key_id, while_timer_multi):
