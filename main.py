@@ -1,6 +1,8 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
+import time
+
 
 #autenticação para firebase
 cred = credentials.Certificate("serviceAccountKey.json")
@@ -9,7 +11,7 @@ firebase_admin.initialize_app(cred, {"databaseURL": "https://sekeyrity-c3b78-def
 
 
 #adicionar um novo user à base de dados 
-def create_new_user(user_name, email, key_1_acess, key_2_acess, key_3_acess, key_4_acess):
+def create_new_user(user_name, email, card_tag, key_1_acess, key_2_acess, key_3_acess, key_4_acess):
 
     #antes de registarmos temos de ver se já esta registado
     
@@ -22,6 +24,7 @@ def create_new_user(user_name, email, key_1_acess, key_2_acess, key_3_acess, key
 
     new_user = {
         "e-mail": email,
+        "card_tag": card_tag,
         "key-01": key_1_acess,
         "key-02": key_2_acess,
         "key-03": key_3_acess,
@@ -87,11 +90,3 @@ def change_access(user_name, key_id, new_value):
 
     return
     
-
-
-
-#referências
-ref_root = db.reference("/")
-ref_users= db.reference('users')
-
-create_new_user("miguel andrade", "miguel.andrade.net@gmail.com", True, True, False, False)
