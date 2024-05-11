@@ -385,9 +385,23 @@ def key_gone(key_number, user_name):
 
         if DEBUG == 1:
             print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
+
+        if key_number < 10:
+            key_id = f"key-0'{key_number}'"
+        elif key_number < 100:
+            key_id = f"key-'{key_number}'"
+        else:
+            print("register_movement is not implemented for more than 100 keys")
+            return
+
+        register_movement(user_name, key_id, True, False)
+        
+    
     else:
         # Se o usuário não existir, exiba uma mensagem
         print(f"Usuário '{user_name}' não existe.")
+
+    return
 
 # remove a flag to know that this user no longer has this key
 def key_back(key_number,user_name):
@@ -418,6 +432,21 @@ def key_back(key_number,user_name):
 
             if DEBUG == 1:
                 print(f"have_key update to '{buff}'!!")
+
+        if key_number < 10:
+            key_id = f"key-0'{key_number}'"
+        elif key_number < 100:
+            key_id = f"key-'{key_number}'"
+        else:
+            print("register_movement is not implemented for more than 100 keys")
+            return
+
+        register_movement(user_name, key_id, False, True)
+        return
+    
+    else:
+        # Se o usuário não existir, exiba uma mensagem
+        print(f"Usuário '{user_name}' não existe.")
 
 
 # key_id é o que é lido no leitor e key_nmeber é a nossa numeração[1,2,3,4]
