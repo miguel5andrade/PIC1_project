@@ -597,13 +597,20 @@ try:
                 sleep(1)
                 loop_flag = 2
             # ainda não acabou o registo
-            elif user_name == "default":
+            elif user_name[:7] == "default":
                 lcd.message('Go to our app\nto register')
                 sleep(2)
                 lcd.clear()
 
-                lcd.message('Forget key? Wait \n10min')
-                sleep(2)
+                lcd.message('Forget password?\n')
+                len = len(user_name)
+                password = user_name[7:len]
+
+                if DEBUG == 1:
+                    print("user password:")
+                    print(f"{password}")
+                lcd.message(password)
+                sleep(10)
                 lcd.clear()
 
                 loop_flag = 0
