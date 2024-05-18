@@ -393,6 +393,9 @@ def key_gone(key_number, user_name):
         else:
             print("register_movement is not implemented for more than 100 keys")
             return
+        
+        key_name = "key_" + str(key_number)
+        ref_keys.child(key_name).update({"available": False})
 
         register_movement(user_name, key_id, True, False)
         
@@ -440,6 +443,9 @@ def key_back(key_number,user_name):
         else:
             print("register_movement is not implemented for more than 100 keys")
             return
+        
+        key_name = "key_" + str(key_number)
+        ref_keys.child(key_name).update({"available": True})
 
         register_movement(user_name, key_id, False, True)
         return
@@ -458,7 +464,7 @@ def key_id_to_number(key_id, key_number):
 
     if data:
         for data_keys_name in data:
-            data_keys_id = ref_keys.child(data_keys_name).get()
+            data_keys_id = ref_keys.child(data_keys_name).child("key_id").get()
             if DEBUG == 1:
                 print("Comparing this keys")
                 print(f"\t'{data_keys_id}'")
@@ -525,7 +531,22 @@ def register_movement(username, key_id, take_key, return_key):
     ref_movement.child(timestamp).set(topic)
     return
 
+def is_key_availabel(key_number):
 
+    keys_data = ref_keys.get()
+    if keys_data is not None:
+
+        str_key_number = str(key_number)
+        key_name = "key_" + str_key_number
+        print(key_name)
+
+        available  = ref_keys.child(key_name).child("available").get()    
+        return available 
+                    
+    else:
+        print("Erro in is_key_availabel(), keys_data is None")
+
+    return False
 
 """ RFID reader """
 def reader_thread(key_id, while_timer_multi):
@@ -533,13 +554,16 @@ def reader_thread(key_id, while_timer_multi):
     # esperar pela chave passar no leitor
     id, text = reader.read()
     if id:
-        key_id.value = id
+        key_number = key_id_to_number(id, key_return)
+        key_id.value = key_number
         while_timer_multi.value = 0 # stops timer thread
         if DEBUG == 1:
             print("Antes de sair de reader_thread()")
             print(f"\tkey_id.value:'{key_id.value}'")
             print(f"\twhile_timer_multi.value:'{while_timer_multi.value}'")
             print(f"\tid:'{id}'")
+
+            
 
     return
 
@@ -603,8 +627,8 @@ try:
                 lcd.clear()
 
                 lcd.message('Forget password?\n')
-                len = len(user_name)
-                password = user_name[7:len]
+                user_len = len(user_name)
+                password = user_name[7:user_len]
 
                 if DEBUG == 1:
                     print("user password:")
@@ -660,8 +684,7 @@ try:
 
                                         thread_stop_after_1min.cancel()
 
-                                        key_number = key_id_to_number(key_id.value, key_return)
-
+                                        key_number = key_id.value
                                         if key_number != 0:
                                             lcd.clear()
                                             strore_key(key_return)
@@ -794,6 +817,14 @@ try:
                                 lcd.clear()
                                 number_key_list.clear()
                                 loop_flag = 3
+                                break
+                            elif is_key_availabel(number_key) == False:
+                                lcd.clear()
+                                lcd.message('Not availebel')
+                                sleep(2)
+                                lcd.clear()
+
+                                loop_flag = 0
                                 break
                             elif requested_key(number_key, user_name):
                                 if DEBUG == 1:
