@@ -18,4 +18,5 @@ Como correr o programa:
 4. python3 main.py
 
 Como conectar o hardware
-![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/b59254ac-73ba-43d6-b0ee-8d7a61803ff5)
+![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/c24ebe51-8938-42d8-ae0d-61d7fc987c15)
+
