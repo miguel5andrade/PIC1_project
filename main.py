@@ -391,3 +391,5 @@ try:
 except KeyboardInterrupt:
     if DEBUG == 1:
 	    print("Programa terminado")
+lcd.clear()
+lcd.message('Program stop')
