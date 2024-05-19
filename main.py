@@ -3,19 +3,8 @@
 ##LIB
 # general
 from time import sleep
-import time
-# servo
-from gpiozero import Servo
 # RFID redear
-import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
-import queue
-# LCD
-import Adafruit_CharLCD as LCD
-# DATABASE
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
 import random 
 # threads
 import threading
@@ -40,11 +29,6 @@ key_id = -1
 
 #RFID reader
 reader = SimpleMFRC522()
-
-
-#autenticação para firebase
-cred = credentials.Certificate("serviceAccountKey.json")
-firebase_admin.initialize_app(cred, {"databaseURL": "https://sekeyrity-c3b78-default-rtdb.europe-west1.firebasedatabase.app/"})
 
 
 """General"""
