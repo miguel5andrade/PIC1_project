@@ -218,9 +218,9 @@ def key_gone(key_number, user_name):
             print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
 
         if key_number < 10:
-            key_id = f"key-0'{key_number}'"
+            key_id = f"key-0{key_number}"
         elif key_number < 100:
-            key_id = f"key-'{key_number}'"
+            key_id = f"key-{key_number}"
         else:
             print("register_movement is not implemented for more than 100 keys")
             return
@@ -228,7 +228,7 @@ def key_gone(key_number, user_name):
         key_name = "key_" + str(key_number)
         ref_keys.child(key_name).update({"available": False})
 
-        register_movement(user_name, key_id, True, False)
+        register_out_movement(user_name, key_id, True, False)
         
     
     else:
@@ -268,9 +268,9 @@ def key_back(key_number,user_name):
                 print(f"have_key update to '{buff}'!!")
 
         if key_number < 10:
-            key_id = f"key-0'{key_number}'"
+            key_id = f"key-0{key_number}"
         elif key_number < 100:
-            key_id = f"key-'{key_number}'"
+            key_id = f"key-{key_number}"
         else:
             print("register_movement is not implemented for more than 100 keys")
             return
@@ -278,7 +278,7 @@ def key_back(key_number,user_name):
         key_name = "key_" + str(key_number)
         ref_keys.child(key_name).update({"available": True})
 
-        register_movement(user_name, key_id, False, True)
+        register_in_movement(key_id)
         return
     
     else:
@@ -338,7 +338,7 @@ def requested_key(key_number, user_name):
     return False
 
 
-def register_movement(username, key_id, take_key, return_key):
+def register_out_movement(username, key_id, take_key, return_key):
     #temos de criar um novo dentro do nó 'movements' onde registamos: o user, o id da chave que levou, se levou ou entregou a chave e um timestamp.
 
     now = time.localtime()
@@ -347,20 +347,56 @@ def register_movement(username, key_id, take_key, return_key):
     year = str(now.tm_year)
     hour = str(now.tm_hour).zfill(2)
     minute = str(now.tm_min).zfill(2)
+    seconds = str(now.tm_sec).zfill(2)
     
-    timestamp = f"{day}-{month}-{year} : {hour}-{minute}"
+    timestamp = f"{day}-{month}-{year} : {hour}-{minute}-{seconds}"
 
     topic = {
         "username": username,
         "key_id": key_id,
         "take_key": take_key,
-        "return_key": return_key
+        "return_key": return_key,
+        "return_time" : ""
     }
 
     #adiciona novo nó
     print(timestamp)
     ref_movement.child(timestamp).set(topic)
     return
+
+def register_in_movement(key_id):
+    
+    
+    movements = ref_movement.get()
+    last_time_stamp = ""
+
+    for data_time_stamp in movements:
+        data_key_id = ref_movement.child(data_time_stamp).child("key_id").get()
+        if DEBUG == 1:
+            print("Comparando:")
+            print(f"\t{key_id}")
+            print(f"\t{data_key_id}")
+
+        if key_id == data_key_id:
+            if DEBUG == 1:
+                print("encontrei um movimento associado a este")
+
+
+            last_time_stamp = data_time_stamp
+
+    if last_time_stamp != "":
+        ref_movement.child(last_time_stamp).update({"return_key": True})
+
+        now = time.localtime()
+        day = str(now.tm_mday).zfill(2)
+        month = str(now.tm_mon).zfill(2)
+        year = str(now.tm_year)
+        hour = str(now.tm_hour).zfill(2)
+        minute = str(now.tm_min).zfill(2)
+        
+        timestamp = f"{day}-{month}-{year} : {hour}-{minute}"
+        ref_movement.child(last_time_stamp).update({"return_time": timestamp})
+
 
 def is_key_availabel(key_number):
 
