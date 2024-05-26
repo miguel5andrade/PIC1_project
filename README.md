@@ -61,6 +61,8 @@ pip3 install firebase_admin
 ```
 
 LCD → in onother teminal(I think that this not work):
+```jsx
 git clone https://github.com/pimylifeup/Adafruit_Python_CharLCD.git
 cd ./Adafruit_Python_CharLCD
 sudo python3 setup.py install
+```
