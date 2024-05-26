@@ -62,7 +62,15 @@ pip3 install firebase_admin
 
 LCD → in onother teminal(I think that this not work):
 ```jsx
-git clone https://github.com/pimylifeup/Adafruit_Python_CharLCD.git
+git clone https://github.com/pimylifeup/Adawebfruit_Python_CharLCD.git
 cd ./Adafruit_Python_CharLCD
 sudo python3 setup.py install
 ```
+
+
+
+webgrafia:
+https://pimylifeup.com/raspberry-pi-rfid-rc522/
+https://pimylifeup.com/raspberry-pi-rfid-attendance-system/
+https://www.youtube.com/watch?v=ussUfg68L8w&ab_channel=DonskyTech
+
