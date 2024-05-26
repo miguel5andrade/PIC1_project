@@ -33,7 +33,8 @@ def open_gate(key_number):
         print(f"ERRO: you can dispense {key_number} key. key is 1,2,3 or 4")
         return
     
-    rotate_servo(key_number, servos_direc_default[key_number - 1])
+    
+    rotate_servo(key_number, servos_direc_default[key_number])
 
     lcd.message('key dispensed')
     sleep(2)

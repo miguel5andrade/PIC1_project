@@ -191,7 +191,7 @@ try:
                                         key_number = key_id.value
                                         if key_number != 0:
                                             lcd.clear()
-                                            strore_key(key_return)
+                                            strore_key(key_number)
                                             key_back(key_number, user_name)
 
                                             lcd.message('Thanks')
@@ -381,7 +381,7 @@ try:
             access = check_access(user_name, number_key)
 
             if access == True:
-                open_gate()
+                open_gate(number_key)
                 key_gone(number_key, user_name)
 
             number_key_list.clear()
