@@ -18,7 +18,7 @@ from dispenser import *
 
 
 """global variables"""
-DEBUG = 1           # 0 - sem deug , 1 - prints no terminal, 2 - prints no LCD e no terminal
+DEBUG = 1           # 0 - sem prints de deug , 1 - com prints de debug
 loop_flag = 0       # 0 - primeirar iteração, 1 - escrever no teclado, 2 - à espera da tag rfid
 number_key_list = []
 global while_timer
@@ -49,7 +49,11 @@ def split_integer_to_list(integer):
     
     return integer_list
 
-
+def is_key_number(number):
+    if number > 4 or number < 1:
+        return 0
+    else:
+        return 1
 
 
 """ RFID reader """
@@ -62,10 +66,10 @@ def reader_thread(key_id, while_timer_multi):
         key_id.value = key_number
         while_timer_multi.value = 0 # stops timer thread
         if DEBUG == 1:
-            print("Antes de sair de reader_thread()")
-            print(f"\tkey_id.value:'{key_id.value}'")
-            print(f"\twhile_timer_multi.value:'{while_timer_multi.value}'")
-            print(f"\tid:'{id}'")
+            print("\t[DEBUG]Antes de sair de reader_thread()")
+            print(f"\t\tkey_id.value:'{key_id.value}'")
+            print(f"\t\twhile_timer_multi.value:'{while_timer_multi.value}'")
+            print(f"\t\tid:'{id}'")
 
             
 
@@ -86,12 +90,12 @@ try:
     key_id = Value('i', 0)    # argumento para a multithread de leitura chaves
     while_timer_multi = Value('i', 0)   # argumento para a multithread de leitura de chaver
     
-    if DEBUG == 1:
-        print("Setup done!")
+    print("Setup done!")
     
     lcd.clear()
     lcd.clear()
     lcd.message('Setup\ndone!')
+    print("[LCD]Setup done!")
     sleep(2)
     lcd.clear()
 
@@ -100,6 +104,7 @@ try:
         # leitura de cartão do utilizador
         if loop_flag == 0:
             lcd.message('Scan your \ncard')
+            print("[LCD]Scan your card")
             sleep(0.5)
 
             card_id, text = reader.read()
@@ -108,7 +113,7 @@ try:
             lcd.clear()
             
             if  DEBUG == 1:
-                print(f"Card ID: '{card_id}")
+                print(f"\t[DEBUG]Reade card ID: '{card_id}")
 
         # descobre o user_name, se não existir regista ou verifica se tem chaves para devolver
         if loop_flag == 1:
@@ -118,26 +123,29 @@ try:
             # não existe nenhum utilizador com este cartão
             if user_name == 0 :
                 lcd.message('You are not\nregistered')
+                print("[LCD]You are not registered")
                 sleep(2)
 
                 lcd.clear()
                 lcd.message('Would you like\nto register?')
+                print("[LCD]Would you like to register?")
                 sleep(1)
                 loop_flag = 2
             # ainda não acabou o registo
             elif user_name[:7] == "default":
                 lcd.message('Go to our app\nto register')
+                print("[LCD]Go to our app to register")
                 sleep(2)
                 lcd.clear()
 
                 lcd.message('Forget password?\n')
+                print("[LCD]Forget password?")
                 user_len = len(user_name)
                 password = user_name[7:user_len]
 
-                if DEBUG == 1:
-                    print("user password:")
-                    print(f"{password}")
+                
                 lcd.message(password)
+                print(f"[LCD]{password}")
                 sleep(10)
                 lcd.clear()
 
@@ -149,7 +157,9 @@ try:
                     lcd.clear()
                     lcd.clear()
                     lcd.message('Return[green]\n')
+                    print(f"[LCD]Return[green]")
                     lcd.message('Request[red]\n')
+                    print(f"[LCD]Request[red]")
                     # timeout thread
                     while_timer = 1
                     thread_stop_after_1min = threading.Timer(60.0, timer)
@@ -164,11 +174,12 @@ try:
                             # quer devolver uma chave
                             if key == "#":
                                 if DEBUG == 1:
-                                    print("read: # (Return key)")
+                                    print("\t[DEBUG]read: # (Return key)")
 
                                 lcd.clear()
                                 lcd.clear()
                                 lcd.message('Insert the key \nto be returned')
+                                print(f"[LCD]Insert the key nto be returned")
                                  # timeout thread
                                 while_timer = 1
                                 thread_stop_after_1min = threading.Timer(60.0, timer)
@@ -183,8 +194,7 @@ try:
                                 while(1):
                                     if key_id.value != -1:
                                         if DEBUG == 1:
-                                            print("read somthing")
-                                            print(key_id.value)
+                                            print(f"\t[DEBUG]read somthing{key_id.value}")
 
                                         thread_stop_after_1min.cancel()
 
@@ -204,16 +214,18 @@ try:
                                             lcd.clear()
                                         break
                                     if while_timer == 0 or while_timer_multi.value == 0:
-                                        if DEBUG == 1:
-                                            print("time out")
-                                            print(key_id)
+                                            
 
                                         lcd.clear()
                                         lcd.message('Timeout')
+                                        print("[LCD]Timeout")
                                         sleep(2)
                                         lcd.clear()
 
                                         thread_reader.terminate()
+
+                                        # key goes to trash can
+                                        rotate_servo(8, "left")
                                         break
 
 
@@ -223,7 +235,7 @@ try:
                             # retirar chave 
                             elif key == "*":
                                 if DEBUG == 1:
-                                    print("read: * (levar chave)")
+                                    print("\t[DEBUG]read: * (levar chave)")
 
                                 loop_flag = 3
                                 break
@@ -247,6 +259,7 @@ try:
                     # quer se registar
                     if key == "#":
                         lcd.message('Open our app and\ninsert this key')
+                        print("[LCD]Open our app and\ninsert this key")
                         sleep(4)
 
                         password = random.randint(1, 10000)
@@ -257,8 +270,10 @@ try:
 
                         lcd.clear()
                         lcd.message('Key:\n')
+                        print("[LCD]Key:")
                         #password_text = split_integer_to_list(password)
                         lcd.message(str(password))
+                        print(f"[LCD]{str(password)}")
                         sleep(15)
                         lcd.clear()
 
@@ -273,11 +288,10 @@ try:
                 elif while_timer == 0:
                     lcd.clear()
                     lcd.message('Timeout')
+                    print("[LCD]time out")
                     sleep(2)
                     lcd.clear()
-                    if DEBUG == 1:
-                        print("time out")
-                        print(key_id)
+                        
 
                     loop_flag = 0
                     break
@@ -285,6 +299,7 @@ try:
         # mensagem de inicio do loop de entrega da chave
         elif loop_flag == 3:
             lcd.message('Number of the\nkey?')
+            print("[LCD]Number of the\nkey?")
             sleep(0.5)
             loop_flag = 4
         
@@ -305,18 +320,23 @@ try:
                         if not number_key_list:
                             lcd.clear()
                             lcd.message('Chose a key')
+                            print("[LCD]Chose a key")
+
                             sleep(2)
+
                             lcd.clear()
                             lcd.message("Digited:\n")
                             lcd.message(number_key_list)
+                            print(f"[LCD]Digited:{number_key_list}")
                         else:
                             number_key = list_to_integer(number_key_list)
                             if DEBUG == 1:
-                                print(f"key number: '{number_key}'")
+                                print(f"\t[DEBUG]key number: '{number_key}'")
 
                             if is_key_number(number_key) == 0 :
                                 lcd.clear()
                                 lcd.message('Key number [1;4]')
+                                print("[LCD]Key number [1;4]")
                                 sleep(2)
                                 lcd.clear()
                                 number_key_list.clear()
@@ -325,6 +345,7 @@ try:
                             elif is_key_availabel(number_key) == False:
                                 lcd.clear()
                                 lcd.message('Not availebel')
+                                print("[LCD]Not availebel")
                                 sleep(2)
                                 lcd.clear()
 
@@ -332,10 +353,11 @@ try:
                                 break
                             elif requested_key(number_key, user_name):
                                 if DEBUG == 1:
-                                    print("O utilizador já tem esta chave")
+                                    print("\t[DEBUG]O utilizador já tem esta chave")
 
                                 lcd.clear()
                                 lcd.message('You already have\nthis key')
+                                print("[LCD]You already have this key")
                                 sleep(2)
                                 lcd.clear()
                                 number_key_list.clear()
@@ -360,18 +382,15 @@ try:
                         lcd.clear()
                         lcd.message("Digited:\n")
                         lcd.message(number_key_list)
+                        print(f"[LCD]Digited:{number_key_list}")
 
-                    if DEBUG == 1:
-                        print(number_key_list)
                 
                 elif while_timer == 0:
                     lcd.clear()
                     lcd.message('Timeout')
+                    print("[LCD]Timeout")
                     sleep(2)
                     lcd.clear()
-                    if DEBUG == 1:
-                        print("time out")
-                        print(key_id)
 
                     loop_flag = 0
                     break
@@ -389,7 +408,7 @@ try:
 
 ## pára o programa com um Ctrl + c
 except KeyboardInterrupt:
-    if DEBUG == 1:
-	    print("Programa terminado")
-lcd.clear()
-lcd.message('Program stop')
+    lcd.clear()
+lcd.message('Program stoped')
+print("[LCD]Program stoped")
+

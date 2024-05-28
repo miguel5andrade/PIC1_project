@@ -27,7 +27,7 @@ def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_aces
     #se ja estiver registado bazamos
     if password == data_password:
         if DEBUG == 1:
-            print(f"User '{user_name}' already registered, failure.")
+            print(f"\t[DEBUG]User '{user_name}' already registered, failure.")
         return
 
     new_user = {
@@ -55,7 +55,7 @@ def create_new_user(user_name, email, card_id, password, key_1_acess, key_2_aces
     ref_root.child("num_of_users").set(num_of_users)
 
     if DEBUG == 1:
-        print(f"User '{user_name}' registered.")
+        print(f"\t[DEBUG]User '{user_name}' registered.")
     return
 
 #apaga user da base de dados
@@ -72,7 +72,7 @@ def delete_user(user_name, password):
         ref_users.child(user_name).delete()
 
         if DEBUG == 1:
-            print(f"User '{user_name}' deleted.")
+            print(f"\t[DEBUG]User '{user_name}' deleted.")
 
         # Obtém o valor atual de num_of_users
         num_of_users = ref_root.child("num_of_users").get()
@@ -84,7 +84,7 @@ def delete_user(user_name, password):
     else:
         if DEBUG == 1:
             # Se o usuário não existir, exiba uma mensagem
-            print(f"User '{user_name}' not registered, can't delete.")
+            print(f"\t[DEBUG]User '{user_name}' not registered, can't delete.")
 
     return
 
@@ -99,11 +99,11 @@ def change_access(user_name, key_id, new_value):
         ref_users.child(user_name).update({key_id: new_value})
 
         if DEBUG == 1:
-            print(f"Valor de acesso '{key_id}' do usuário '{user_name}' alterado para '{new_value}'.")
+            print(f"\t[DEBUG]Valor de acesso '{key_id}' do usuário '{user_name}' alterado para '{new_value}'.")
     else:
         if DEBUG == 1:
             # Se o usuário não existir, exiba uma mensagem
-            print(f"Usuário '{user_name}' não existe.")
+            print(f"\t[DEBUG]Usuário '{user_name}' não existe.")
 
     return
 
@@ -125,9 +125,9 @@ def check_card_id(user_id):
 
     if DEBUG >= 1:
         if access == 0:
-            print("id not registed")
+            print("\t[DEBUG]id not registed")
         else:
-            print(f"id registed with user name:'{user_name}'")
+            print(f"\t[DEBUG]id registed with user name:'{user_name}'")
 
     if access == 0:
         return 0
@@ -147,19 +147,15 @@ def check_access(user_name, number_key):
     if data:
         access = ref_users.child(user_name).child(key_name).get()
 
-        if DEBUG >= 1:
-            if access == 0:
-                print("denied")
-            else:
-                print("access")
-
         if access == False:
             lcd.message('Access \ndenied!')
+            print("[LCD]Access \denied!")
             sleep(2)
             lcd.clear()
             return 0
         else:
             lcd.message('Access \ngaranted!')
+            print("[LCD]Access garanted!")
             sleep(2)
             lcd.clear()
             return 1
@@ -167,9 +163,8 @@ def check_access(user_name, number_key):
 
     else:
         if DEBUG == 1:
-            print("ERRO: no data in data base")
-        if DEBUG >= 2:
-            lcd.message('Erro: \nin data base')
+            print("[ERRO] no data in data base")
+
         return 0
     
 def have_key(user_name): 
@@ -181,20 +176,22 @@ def have_key(user_name):
             return 0
         else:
             lcd.message('You have this \nkeys:')
+            print("[LCD]You have this \nkeys:")
             n = len(str(key))
             str_key = str(key)
             for i in range(n):
                 if i != 0:
                     lcd.message(',')
+                    print(",", end =" ")
                 lcd.message(str_key[i])
+                print(f"{str_key[i]}", end ="")
+            print("")
                 
             sleep(4)
         return key
     else:
         if DEBUG == 1:
-            print("ERRO: no data in data base")
-        if DEBUG >= 2:
-            lcd.message('Erro: \nin data base')
+            print("[ERRO] no data in data base")
         return 0
     
 # insert a flag to know that this user has this key
@@ -203,7 +200,7 @@ def key_gone(key_number, user_name):
     # Verifica se o usuário existe
     user_exists = ref_users.child(user_name).get()
     if DEBUG == 1:
-        print(key_number)
+        print(f"\t[DEBUG]key_number")
     if user_exists is not None:
         # retirar chave
         have_key = ref_users.child(user_name).child("have_key").get()
@@ -215,7 +212,7 @@ def key_gone(key_number, user_name):
             ref_users.child(user_name).update({"have_key": have_key})
 
         if DEBUG == 1:
-            print(f"O utilizador '{user_name}' levou a chave '{key_number}'.")
+            print(f"\t[DEBUG]O utilizador '{user_name}' levou a chave '{key_number}'.")
 
         if key_number < 10:
             key_id = f"key-0{key_number}"
@@ -250,7 +247,7 @@ def key_back(key_number,user_name):
             ref_users.child(user_name).update({"have_key": 0})
 
             if DEBUG == 1:
-                print("have_key update to 0!!")
+                print("\t[DEBUG]have_key update to 0!!")
 
         # retirar o numero da chave devolvida da flag
         else:
@@ -265,7 +262,7 @@ def key_back(key_number,user_name):
             ref_users.child(user_name).update({"have_key": have_key})
 
             if DEBUG == 1:
-                print(f"have_key update to '{buff}'!!")
+                print(f"\t[DEBUG]have_key update to '{buff}'!!")
 
         if key_number < 10:
             key_id = f"key-0{key_number}"
@@ -297,9 +294,9 @@ def key_id_to_number(key_id, key_number):
         for data_keys_name in data:
             data_keys_id = ref_keys.child(data_keys_name).child("key_id").get()
             if DEBUG == 1:
-                print("Comparing this keys")
-                print(f"\t'{data_keys_id}'")
-                print(f"\t'{key_id}'")
+                print("\t[DEBUG]Comparing this keys")
+                print(f"\t\t'{data_keys_id}'")
+                print(f"\t\t'{key_id}'")
 
             if key_id == data_keys_id:
                 str_key_nember = str(key_number)
@@ -310,11 +307,9 @@ def key_id_to_number(key_id, key_number):
                         return i
 
                 if valid_key != True:
-                    if DEBUG == 1:
-                        print("Wrong key")
-                    
                     lcd.clear()
                     lcd.message('Wrong key')
+                    print("[LCD]Wrong key")
                     sleep(2)
                     lcd.clear()
                 break
@@ -373,13 +368,13 @@ def register_in_movement(key_id):
     for data_time_stamp in movements:
         data_key_id = ref_movement.child(data_time_stamp).child("key_id").get()
         if DEBUG == 1:
-            print("Comparando:")
-            print(f"\t{key_id}")
-            print(f"\t{data_key_id}")
+            print("\t[DEBUG]Comparando:")
+            print(f"\t\t{key_id}")
+            print(f"\t\t{data_key_id}")
 
         if key_id == data_key_id:
             if DEBUG == 1:
-                print("encontrei um movimento associado a este")
+                print("\t[DEBUG]encontrei um movimento associado a este")
 
 
             last_time_stamp = data_time_stamp

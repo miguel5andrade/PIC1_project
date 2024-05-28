@@ -47,6 +47,8 @@ def strore_key(key_number):
         print(f"ERRO: you can store {key_number} key. key is 1,2,3 or 4")
         return
 
+    rotate_servo(8, "right")
+
     if key_number < 3:
         rotate_servo(7, "left")
         if key_number == 1:
@@ -61,14 +63,14 @@ def strore_key(key_number):
             rotate_servo(6, "right")
 
     if DEBUG == 1:
-        print(f"key_{key_number} was stored")
+        print(f"\t[DEBUG]key_{key_number} was stored")
     
 
 
 def rotate_servo(servo_number, direction):
 
     if DEBUG == 1:
-        print(f"Servo {servo_number} rotated to {direction}!!")
+        print(f"\t[DEBUG]Servo {servo_number} rotated to {direction}!!")
 
     if servo_number == 1:
         if direction == "left":

@@ -61,8 +61,3 @@ def read_keypad():
     time.sleep(0.2)
     return "nada"
 
-def is_key_number(number):
-    if number > 4 or number < 1:
-        return 0
-    else:
-        return 1
