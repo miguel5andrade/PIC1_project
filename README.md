@@ -18,5 +18,58 @@ Como correr o programa:
 4. python3 main.py
 
 Como conectar o hardware
-![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/c24ebe51-8938-42d8-ae0d-61d7fc987c15)
+![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/3bc44696-e45e-4138-9693-fdbb76901477)
+
+Instalar Package:
+
+create folder:
+
+```jsx
+mkdir project
+cd project
+```
+
+create env:
+
+```jsx
+python3 -m venv env
+```
+
+activate env:
+
+```jsx
+source env/bin/activate
+```
+
+install spidev(if not already):
+
+```jsx
+python3 -m pip install spidev
+```
+
+install lib for rfid reader:
+
+```jsx
+python3 -m pip install mfrc522
+```
+
+firebase:
+
+```jsx
+pip3 install firebase_admin
+```
+
+LCD → in onother teminal(I think that this not work):
+```jsx
+git clone https://github.com/pimylifeup/Adawebfruit_Python_CharLCD.git
+cd ./Adafruit_Python_CharLCD
+sudo python3 setup.py install
+```
+
+
+
+webgrafia:
+https://pimylifeup.com/raspberry-pi-rfid-rc522/
+https://pimylifeup.com/raspberry-pi-rfid-attendance-system/
+https://www.youtube.com/watch?v=ussUfg68L8w&ab_channel=DonskyTech
 
