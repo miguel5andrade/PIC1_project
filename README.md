@@ -18,7 +18,7 @@ Como correr o programa:
 4. python3 main.py
 
 Como conectar o hardware
-![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/3bc44696-e45e-4138-9693-fdbb76901477)
+![esquema eletrico](https://github.com/miguel5andrade/PIC1_project/assets/109182326/221eeeb6-2303-4f3f-8318-d5080b8e9d17)
 
 Instalar Package:
 
