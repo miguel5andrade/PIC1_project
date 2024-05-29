@@ -36,6 +36,25 @@ def servo_init():
     servo7.mid() 
     servo8.mid() 
 
+def teste_servos():
+    rotate_servo(1, "left")
+    rotate_servo(2, "left")
+    rotate_servo(3, "left")
+    rotate_servo(4, "left")
+    rotate_servo(5, "left")
+    rotate_servo(6, "left")
+    rotate_servo(7, "left")
+    rotate_servo(8, "left")
+
+    rotate_servo(1, "right")
+    rotate_servo(2, "right")
+    rotate_servo(3, "right")
+    rotate_servo(4, "right")
+    rotate_servo(5, "right")
+    rotate_servo(6, "right")
+    rotate_servo(7, "right")
+    rotate_servo(8, "right")
+
 
 ## função que vai tratar da disponibilização de uma chave
 def open_gate(key_number):

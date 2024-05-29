@@ -54,7 +54,42 @@ def is_key_number(number):
         return 0
     else:
         return 1
+    
+def timer():
+    global while_timer
 
+    while_timer = 0
+    return
+    
+
+def teste_hardware():
+    lcd.clear()
+    lcd.message('LCD teste')
+    print("[LCD]LCD teste")
+    lcd_test()
+
+    lcd.clear()
+    lcd.message('teste do servos')
+    print("[LCD]teste do servos")
+    teste_servos()
+
+    lcd.clear()
+    lcd.message('teste do teclado')
+    print("[LCD]teste do teclado")
+    teste_valido = teste_teclado()
+
+    if teste_valido == False:
+        return False
+    
+    lcd.clear()
+    lcd.message('teste do RFID\nreader')
+    print("[LCD]teste do RFID reader")
+    teste_valido = teste_RFID()
+
+    if teste_valido == False:
+        return False
+
+    return True
 
 """ RFID reader """
 def reader_thread(key_id, while_timer_multi):
@@ -71,17 +106,29 @@ def reader_thread(key_id, while_timer_multi):
             print(f"\t\twhile_timer_multi.value:'{while_timer_multi.value}'")
             print(f"\t\tid:'{id}'")
 
-            
-
     return
 
-def timer():
-    global while_timer
+def teste_RFID():
+    lcd.clear()
+    lcd.message('sacan a card')
+    print("[LCD]sacan a card")
 
-    while_timer = 0
-    return
-    
+    thread_stop_after_1min = threading.Timer(20.0, timer)
+    thread_stop_after_1min.start()
 
+    # thread de leitura das chaves por RFID
+    key_id.value = -1
+    while_timer_multi.value = 1 # flag to stop timer thread
+    thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
+    thread_reader.start()
+
+    while(1):
+        if key_id.value != -1:
+            lcd.clear()
+            return True
+        elif while_timer == 0 or while_timer_multi.value == 0:
+            lcd.clear()
+            return False
 
 """ MAIN """
 try:
@@ -89,6 +136,11 @@ try:
     servo_init()        # servos
     key_id = Value('i', 0)    # argumento para a multithread de leitura chaves
     while_timer_multi = Value('i', 0)   # argumento para a multithread de leitura de chaver
+
+    teste_valido = teste_hardware()
+
+    if teste_valido == False:
+        sys.exit(1)
     
     print("Setup done!")
     
