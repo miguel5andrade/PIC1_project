@@ -26,6 +26,17 @@ servo8 = Servo(5)
 servos_direc_default = ["right", "left","right", "left"]
 
 """Dispenser functions"""
+def servo_init():
+    servo1.mid() 
+    servo2.mid() 
+    servo3.mid() 
+    servo4.mid() 
+    servo5.mid() 
+    servo6.mid() 
+    servo7.mid() 
+    servo8.mid() 
+
+
 ## função que vai tratar da disponibilização de uma chave
 def open_gate(key_number):
 

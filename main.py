@@ -86,7 +86,7 @@ def timer():
 """ MAIN """
 try:
     ## inicializações
-    servo1.min()        # servos
+    servo_init()        # servos
     key_id = Value('i', 0)    # argumento para a multithread de leitura chaves
     while_timer_multi = Value('i', 0)   # argumento para a multithread de leitura de chaver
     
