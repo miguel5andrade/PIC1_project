@@ -15,6 +15,9 @@ from keypad import *
 from online_database import *
 from lcd import *
 from dispenser import *
+from general import *
+import RPi.GPIO as GPIO
+
 
 
 """global variables"""
@@ -27,39 +30,11 @@ global key_id
 key_id = -1
 
 
+
 #RFID reader
 reader = SimpleMFRC522()
 
 
-"""General"""
-def list_to_integer(list_int):
-    # Convert each integer to a string and concatenate them
-    concatenated_string = ''.join(str(num) for num in list_int)
-
-    # Convert the concatenated string back to an integer
-    resulting_integer = int(concatenated_string)
-    return resulting_integer
-
-def split_integer_to_list(integer):
-    # Convert the integer to a string
-    integer_str = str(integer)
-    
-    # Convert each character back to an integer and collect them in a list
-    integer_list = [int(char) for char in integer_str]
-    
-    return integer_list
-
-def is_key_number(number):
-    if number > 4 or number < 1:
-        return 0
-    else:
-        return 1
-    
-def timer():
-    global while_timer
-
-    while_timer = 0
-    return
     
 
 def teste_hardware():
@@ -108,6 +83,12 @@ def reader_thread(key_id, while_timer_multi):
 
     return
 
+def timer():
+    global while_timer
+
+    while_timer = 0
+    return
+
 def teste_RFID():
     lcd.clear()
     lcd.message('sacan a card')
@@ -129,6 +110,24 @@ def teste_RFID():
         elif while_timer == 0 or while_timer_multi.value == 0:
             lcd.clear()
             return False
+        
+# lé qual é a chave que doi passada em binario que é enviado por um arduino
+def read_pins_from_arduino():
+    while(1):
+        pin_values = {}
+        key = 1
+        for pin in GPIO_PINS:
+            pin_values[pin] = GPIO.input(pin)
+            if pin_values[pin] == 1:
+                return key
+            key += key
+
+        if while_timer == 0:
+            return False
+
+
+        
+    
 
 """ MAIN """
 try:
@@ -137,10 +136,16 @@ try:
     key_id = Value('i', 0)    # argumento para a multithread de leitura chaves
     while_timer_multi = Value('i', 0)   # argumento para a multithread de leitura de chaver
 
-    teste_valido = teste_hardware()
+    ### Setup para ler atraves do arduino qual a chave que passou
+    #Define the GPIO pins according to BCM numbering
+    GPIO_PINS = [2, 3, 14, 15]  
+    # Use BCM numbering
+    GPIO.setmode(GPIO.BCM)
+    # Set up each pin as an input with a pull-down resistor
+    for pin in GPIO_PINS:
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-    # if teste_valido == False:
-    #     sys.exit(1)
+    teste_valido = teste_hardware()
     
     print("Setup done!")
     
@@ -238,47 +243,72 @@ try:
                                 thread_stop_after_1min.start()
 
                                 # thread de leitura das chaves por RFID
-                                key_id.value = -1
-                                while_timer_multi.value = 1 # flag to stop timer thread
-                                thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
-                                thread_reader.start()
+                                # key_id.value = -1
+                                # while_timer_multi.value = 1 # flag to stop timer thread
+                                # thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
+                                # thread_reader.start()
 
-                                while(1):
-                                    if key_id.value != -1:
-                                        if DEBUG == 1:
-                                            print(f"\t[DEBUG]read somthing{key_id.value}")
+                                key_readed = read_pins_from_arduino()
+                                if key_readed == False:
+                                    lcd.clear()
+                                    lcd.message('Timeout')
+                                    print("[LCD]Timeout")
+                                    sleep(2)
+                                    lcd.clear()
+                                    loop_flag = 0
+                                    break
 
-                                        thread_stop_after_1min.cancel()
+                                if key_readed != 0:
+                                    lcd.clear()
+                                    strore_key(key_readed)
+                                    key_back(key_readed, user_name)
 
-                                        key_number = key_id.value
-                                        if key_number != 0:
-                                            lcd.clear()
-                                            strore_key(key_number)
-                                            key_back(key_number, user_name)
+                                    lcd.message('Thanks')
+                                    sleep(3)
+                                    lcd.clear()
+                                else:
+                                    lcd.clear()
+                                    lcd.message('Invalid key')
+                                    sleep(3)
+                                    lcd.clear()
 
-                                            lcd.message('Thanks')
-                                            sleep(3)
-                                            lcd.clear()
-                                        else:
-                                            lcd.clear()
-                                            lcd.message('Invalid key')
-                                            sleep(3)
-                                            lcd.clear()
-                                        break
-                                    if while_timer == 0 or while_timer_multi.value == 0:
+
+                                # while(1):
+                                #     if key_id.value != -1:
+                                #         if DEBUG == 1:
+                                #             print(f"\t[DEBUG]read somthing{key_id.value}")
+
+                                #         thread_stop_after_1min.cancel()
+
+                                #         key_number = key_id.value
+                                #         if key_number != 0:
+                                #             lcd.clear()
+                                #             strore_key(key_number)
+                                #             key_back(key_number, user_name)
+
+                                #             lcd.message('Thanks')
+                                #             sleep(3)
+                                #             lcd.clear()
+                                #         else:
+                                #             lcd.clear()
+                                #             lcd.message('Invalid key')
+                                #             sleep(3)
+                                #             lcd.clear()
+                                #         break
+                                #     if while_timer == 0 or while_timer_multi.value == 0:
                                             
 
-                                        lcd.clear()
-                                        lcd.message('Timeout')
-                                        print("[LCD]Timeout")
-                                        sleep(2)
-                                        lcd.clear()
+                                #         lcd.clear()
+                                #         lcd.message('Timeout')
+                                #         print("[LCD]Timeout")
+                                #         sleep(2)
+                                #         lcd.clear()
 
-                                        thread_reader.terminate()
+                                #         # thread_reader.terminate()
 
-                                        # key goes to trash can
-                                        rotate_servo(8, "left")
-                                        break
+                                #         # key goes to trash can
+                                #         rotate_servo(8, "left")
+                                #         break
 
 
                                 loop_flag = 0
