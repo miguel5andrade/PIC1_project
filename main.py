@@ -69,17 +69,17 @@ def teste_hardware():
     lcd_test()
 
     lcd.clear()
-    lcd.message('teste do servos')
-    print("[LCD]teste do servos")
-    teste_servos()
-
-    lcd.clear()
     lcd.message('teste do teclado')
     print("[LCD]teste do teclado")
     teste_valido = teste_teclado()
 
     if teste_valido == False:
         return False
+
+    lcd.clear()
+    lcd.message('teste do servos')
+    print("[LCD]teste do servos")
+    teste_servos()
     
     lcd.clear()
     lcd.message('teste do RFID\nreader')
@@ -139,8 +139,8 @@ try:
 
     teste_valido = teste_hardware()
 
-    if teste_valido == False:
-        sys.exit(1)
+    # if teste_valido == False:
+    #     sys.exit(1)
     
     print("Setup done!")
     

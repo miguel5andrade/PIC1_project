@@ -37,23 +37,62 @@ def servo_init():
     servo8.mid() 
 
 def teste_servos():
-    rotate_servo(1, "left")
-    rotate_servo(2, "left")
-    rotate_servo(3, "left")
-    rotate_servo(4, "left")
-    rotate_servo(5, "left")
-    rotate_servo(6, "left")
-    rotate_servo(7, "left")
-    rotate_servo(8, "left")
+    while True:
+        rotate_servo(1, "right")
+        sleep(4)
+        rotate_servo(1, "right")
+        sleep(4)
+        rotate_servo(1, "right")
+        sleep(4)
+        rotate_servo(1, "right")
+        sleep(4)
+        rotate_servo(1, "left")
+        sleep(4)
+        rotate_servo(1, "left")
+        sleep(4)
+        rotate_servo(1, "left")
+        sleep(4)
+        rotate_servo(1, "left")
+        sleep(4)
 
-    rotate_servo(1, "right")
+    rotate_servo(2, "left")
+    sleep(4)
     rotate_servo(2, "right")
+    sleep(4)
+
+    rotate_servo(3, "left")
+    sleep(4)
     rotate_servo(3, "right")
-    rotate_servo(4, "right")
+    sleep(4)
+
+    rotate_servo(4, "left")
+    sleep(4)
+
+    rotate_servo(5, "left")
+    sleep(4)
     rotate_servo(5, "right")
+    sleep(4)
+
+    rotate_servo(6, "left")
+    sleep(4)
     rotate_servo(6, "right")
+    sleep(4)
+
+    rotate_servo(7, "left")
+    sleep(4)
     rotate_servo(7, "right")
+    sleep(4)
+
+    rotate_servo(8, "left")
+    sleep(4)
     rotate_servo(8, "right")
+
+    
+    
+    
+    
+    
+    
 
 
 ## função que vai tratar da disponibilização de uma chave
@@ -103,89 +142,89 @@ def rotate_servo(servo_number, direction):
         print(f"\t[DEBUG]Servo {servo_number} rotated to {direction}!!")
 
     if servo_number == 1:
-        if direction == "left":
+        if direction == "right":
             servo1.min()
             sleep(2)
             servo1.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo1.max()
             sleep(2)
             servo1.mid()
             return
     if servo_number == 2:
-        if direction == "left":
+        if direction == "right":
             servo2.min()
             sleep(2)
             servo2.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo2.max()
             sleep(2)
             servo2.mid()
             return
     if servo_number == 3:
-        if direction == "left":
+        if direction == "right":
             servo3.min()
             sleep(2)
             servo3.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo3.max()
             sleep(2)
             servo3.mid()
             return
     if servo_number == 4:
-        if direction == "left":
+        if direction == "right":
             servo4.min()
             sleep(2)
             servo4.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo4.max()
             sleep(2)
             servo4.mid()
             return
     if servo_number == 5:
-        if direction == "left":
+        if direction == "right":
             servo5.min()
             sleep(2)
             servo5.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo5.max()
             sleep(2)
             servo5.mid()
             return
     if servo_number == 6:
-        if direction == "left":
+        if direction == "right":
             servo6.min()
             sleep(2)
             servo6.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo6.max()
             sleep(2)
             servo6.mid()
             return
     if servo_number == 7:
-        if direction == "left":
+        if direction == "right":
             servo7.min()
             sleep(2)
             servo7.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo7.max()
             sleep(2)
             servo7.mid()
             return
     if servo_number == 8:
-        if direction == "left":
+        if direction == "right":
             servo8.min()
             sleep(2)
             servo8.mid()
             return
-        elif direction == "right":
+        elif direction == "left":
             servo8.max()
             sleep(2)
             servo8.mid()

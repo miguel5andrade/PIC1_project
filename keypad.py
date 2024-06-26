@@ -26,86 +26,122 @@ GPIO.setup(C2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(C3, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 def teste_teclado():
+    lcd.clear()
     lcd.message('Prees 1')
     print("[LCD]Prees 1")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "1":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 2')
     print("[LCD]Prees 2")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "2":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 3')
     print("[LCD]Prees 3")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "3":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 4')
     print("[LCD]Prees 4")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "4":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 5')
     print("[LCD]Prees 5")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "5":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 6')
     print("[LCD]Prees 6")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "6":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 7')
     print("[LCD]Prees 7")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "7":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 8')
     print("[LCD]Prees 8")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "8":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 9')
     print("[LCD]Prees 9")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "9":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees RED')
     print("[LCD]Prees RED")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "*":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees 0')
     print("[LCD]Prees 0")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "0":
         print("[ERRO]")
         return False
     
+    lcd.clear()
     lcd.message('Prees GREEN')
     print("[LCD]Prees GREEN")
-    key = read_keypad()
+    key = "nada"
+    while key == "nada":
+        key = read_keypad()
     if key != "#":
         print("[ERRO]")
         return False
