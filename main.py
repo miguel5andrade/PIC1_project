@@ -273,44 +273,6 @@ try:
                                     lcd.clear()
 
 
-                                # while(1):
-                                #     if key_id.value != -1:
-                                #         if DEBUG == 1:
-                                #             print(f"\t[DEBUG]read somthing{key_id.value}")
-
-                                #         thread_stop_after_1min.cancel()
-
-                                #         key_number = key_id.value
-                                #         if key_number != 0:
-                                #             lcd.clear()
-                                #             strore_key(key_number)
-                                #             key_back(key_number, user_name)
-
-                                #             lcd.message('Thanks')
-                                #             sleep(3)
-                                #             lcd.clear()
-                                #         else:
-                                #             lcd.clear()
-                                #             lcd.message('Invalid key')
-                                #             sleep(3)
-                                #             lcd.clear()
-                                #         break
-                                #     if while_timer == 0 or while_timer_multi.value == 0:
-                                            
-
-                                #         lcd.clear()
-                                #         lcd.message('Timeout')
-                                #         print("[LCD]Timeout")
-                                #         sleep(2)
-                                #         lcd.clear()
-
-                                #         # thread_reader.terminate()
-
-                                #         # key goes to trash can
-                                #         rotate_servo(8, "left")
-                                #         break
-
-
                                 loop_flag = 0
                                 break
 
