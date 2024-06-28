@@ -36,7 +36,7 @@ reader = SimpleMFRC522()
 
 
     
-
+# banco de testes para verificar que o hardware está todo bom
 def teste_hardware():
     lcd.clear()
     lcd.message('LCD teste')
@@ -48,21 +48,12 @@ def teste_hardware():
     print("[LCD]teste do teclado")
     teste_valido = teste_teclado()
 
-    if teste_valido == False:
-        return False
-
     lcd.clear()
     lcd.message('teste do servos')
     print("[LCD]teste do servos")
-    teste_servos()
-    
-    lcd.clear()
-    lcd.message('teste do RFID\nreader')
-    print("[LCD]teste do RFID reader")
-    teste_valido = teste_RFID()
+    # teste_servo_com_multiplexer()
 
-    if teste_valido == False:
-        return False
+    # falta o rfid mas é testado logo a seguir
 
     return True
 
@@ -126,13 +117,13 @@ def read_pins_from_arduino():
             return False
 
 
-        
-    
 
 """ MAIN """
 try:
     ## inicializações
-    servo_init()        # servos
+    # servos
+    servo_init()        
+
     key_id = Value('i', 0)    # argumento para a multithread de leitura chaves
     while_timer_multi = Value('i', 0)   # argumento para a multithread de leitura de chaver
 
@@ -146,6 +137,9 @@ try:
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     teste_valido = teste_hardware()
+    servo_init() 
+
+    rotate_servo("left and stay", 8) # o servo 8 é o lixo. quando não começou o processo de entrgua de chaves manda tudo para o lixo
     
     print("Setup done!")
     
@@ -225,11 +219,11 @@ try:
                     while(1):
                         key = read_keypad()
                         if key != "nada":
-                            lcd.clear()
-                            thread_stop_after_1min.cancel() # stop timeout timer
 
                             # quer devolver uma chave
                             if key == "#":
+                                lcd.clear()
+                                thread_stop_after_1min.cancel() # stop timeout timer
                                 if DEBUG == 1:
                                     print("\t[DEBUG]read: # (Return key)")
 
@@ -237,16 +231,13 @@ try:
                                 lcd.clear()
                                 lcd.message('Insert the key \nto be returned')
                                 print(f"[LCD]Insert the key nto be returned")
+
+                                rotate_servo("center", 8) # O servo 8 fica preparado para suportar uma chave
+
                                  # timeout thread
                                 while_timer = 1
                                 thread_stop_after_1min = threading.Timer(60.0, timer)
                                 thread_stop_after_1min.start()
-
-                                # thread de leitura das chaves por RFID
-                                # key_id.value = -1
-                                # while_timer_multi.value = 1 # flag to stop timer thread
-                                # thread_reader = Process(target=reader_thread, args=(key_id, while_timer_multi))
-                                # thread_reader.start()
 
                                 key_readed = read_pins_from_arduino()
                                 if key_readed == False:
@@ -260,7 +251,7 @@ try:
 
                                 if key_readed != 0:
                                     lcd.clear()
-                                    strore_key(key_readed)
+                                    store_key(key_readed)
                                     key_back(key_readed, user_name)
 
                                     lcd.message('Thanks')
@@ -273,16 +264,21 @@ try:
                                     lcd.clear()
 
 
+
                                 loop_flag = 0
                                 break
 
                             # retirar chave 
                             elif key == "*":
+                                lcd.clear()
+                                thread_stop_after_1min.cancel() # stop timeout timer
                                 if DEBUG == 1:
                                     print("\t[DEBUG]read: * (levar chave)")
 
                                 loop_flag = 3
                                 break
+
+
                 else:
                     loop_flag = 3
 
@@ -444,8 +440,14 @@ try:
             access = check_access(user_name, number_key)
 
             if access == True:
-                open_gate(number_key)
+                give_key(number_key)
                 key_gone(number_key, user_name)
+
+                lcd.clear()
+                lcd.message('key dispensed')
+                print("[LCD]key dispensed")
+                sleep(2)
+                lcd.clear()
 
             number_key_list.clear()
             loop_flag = 0
@@ -455,4 +457,6 @@ except KeyboardInterrupt:
     lcd.clear()
 lcd.message('Program stoped')
 print("[LCD]Program stoped")
+
+pi.stop()
 

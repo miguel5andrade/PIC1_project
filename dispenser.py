@@ -1,17 +1,6 @@
-from gpiozero import Servo
+import pigpio
 from time import sleep
-from lcd import *
-
-DEBUG = 1           # 0 - sem deug , 1 - prints no terminal, 2 - prints no LCD e no terminal
-
-servo1 = Servo(0)
-servo2 = Servo(1)
-servo3 = Servo(12)
-servo4 = Servo(7)
-servo5 = Servo(14)
-servo6 = Servo(15)
-servo7 = Servo(3)
-servo8 = Servo(5)
+import RPi.GPIO as GPIO  
 
 """ real life -> servo identification
       8
@@ -21,211 +10,214 @@ servo8 = Servo(5)
 1   2   3   4
 """
 
+DEBUG = 1 # debug flag for prints
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(27, GPIO.OUT) #bit0 de seleção do multiplexer
+GPIO.setup(7, GPIO.OUT)  #bit1 de seleção do multiplexer
+GPIO.setup(5, GPIO.OUT)  #bit2 de seleção do multiplexer
+                         #GPIO12 - PWM for servo
+
+servo_pwm_center = [1600, 1400, 1450, 1500, 1400, 1400, 1500, 1500]
+servos_return_default = ["right", "left","right", "left"]
+
+pi = pigpio.pi()
+if not pi.connected:
+    exit()
 
 
-servos_direc_default = ["right", "left","right", "left"]
+# roda um servo para a direção pedida e volta a mete-lo no centro
+def rotate_servo(direction, servo):
+    servo_og = servo
+    mux_escolher_saida(servo)
 
-"""Dispenser functions"""
+    if direction == "right":
+        pi.set_servo_pulsewidth(12, 1000) # safe anti-clockwise
+        print(f"rotate right servo_{servo_og}")
+        sleep(2)
+        pi.set_servo_pulsewidth(12, servo_pwm_center[servo_og-1]) # centre
+        print(f"rotate centre servo_{servo_og}")
+        sleep(2)
+    elif direction == "left":
+        pi.set_servo_pulsewidth(12, 2000) # safe clockwise
+        print(f"rotate left servo_{servo_og}")
+        sleep(2)
+        pi.set_servo_pulsewidth(12, servo_pwm_center[servo_og-1]) # centre
+        print(f"rotate centre servo_{servo_og}")
+        sleep(2)
+    elif direction == "center":
+        pi.set_servo_pulsewidth(12, servo_pwm_center[servo_og-1]) # centre
+        print(f"rotate centre servo_{servo_og}")
+        sleep(2)
+    elif direction == "left and stay":
+        pi.set_servo_pulsewidth(12, 2000) # centre
+        print(f"rotate left and stay servo_{servo_og}")
+        sleep(2)
+    elif direction == "right and stay":
+        pi.set_servo_pulsewidth(12, 1000) # centre
+        print(f"rotate right and stay servo_{servo_og}")
+        sleep(2)
+
+    mux_off()
+
+# testo do sevo sem multiplexer
+def teste_servo_direto():
+    while (1):
+        pi.set_servo_pulsewidth(12, 1000) # safe anti-clockwise
+        sleep(2)
+        pi.set_servo_pulsewidth(12, 1500) # centre
+        sleep(2)
+        pi.set_servo_pulsewidth(12, 2000) # safe clockwise
+        sleep(2)
+        pi.set_servo_pulsewidth(12, 1000) # safe anti-clockwise
+        sleep(2)
+
+# teste de cada servo um a um         
+def teste_servo_com_multiplexer():
+    # rotate("left",1)   # o 1 não pode rodar para a esquerda
+    # sleep(2)
+    rotate_servo("left",2)
+    sleep(2)
+    rotate_servo("left",3)
+    sleep(2)
+    rotate_servo("left",4)
+    sleep(2)
+    rotate_servo("left",5)
+    sleep(2)
+    rotate_servo("left",6)
+    sleep(2)
+    rotate_servo("left",7)
+    sleep(2)
+    rotate_servo("left",8)
+    sleep(2)
+
+    rotate_servo("right",1)
+    sleep(2)
+    rotate_servo("right",2)
+    sleep(2)
+    rotate_servo("right",3)
+    # rotate_servo("right",4)
+    # sleep(2)
+    rotate_servo("right",5)
+    sleep(2)
+    # rotate_servo("right",6)
+    # sleep(2)
+    rotate_servo("right",7)
+    sleep(2)
+    rotate_servo("right",8)
+    sleep(2)
+
+# mete os bits de seleção a high/logh
+def mux_escolher_saida(servo_number):
+    if servo_number == 6:
+        servo_number = 5
+    elif servo_number > 6:
+        servo_number -= 1
+
+    # escolher a saida do multiplexer
+    binary = bin(servo_number)
+    if servo_number <= 1:
+        GPIO.output(27, int(binary[2]))       #bit0 - set port/pin value to 1/GPIO.HIGH/True 
+        GPIO.output(7, 0)        #bit1 - set port/pin value to 1/GPIO.HIGH/True  
+        GPIO.output(5, 0)        #bit2 - set port/pin value to 1/GPIO.HIGH/True  
+        if DEBUG == 1:
+            print(f"\t[debug] select pins: 00{int(binary[2])}")
+    elif servo_number <=3:
+        GPIO.output(27, int(binary[3]))       #bit0 - set port/pin value to 1/GPIO.HIGH/True  
+        GPIO.output(7, int(binary[2]))        #bit1 - set port/pin value to 1/GPIO.HIGH/True  
+        GPIO.output(5, 0)        #bit2 - set port/pin value to 1/GPIO.HIGH/True 
+        if DEBUG == 1:
+            print(f"\t[debug] select pins: 0{int(binary[3])}{int(binary[2])}")
+    else:
+        GPIO.output(27, int(binary[4]))       #bit0 - set port/pin value to 1/GPIO.HIGH/True  
+        GPIO.output(7, int(binary[3]))        #bit1 - set port/pin value to 1/GPIO.HIGH/True  
+        GPIO.output(5, int(binary[2]))        #bit2 - set port/pin value to 1/GPIO.HIGH/True 
+        if DEBUG == 1:
+            print(f"\t[debug] select pins: {int(binary[4])}{int(binary[3])}{int(binary[2])}")
+    sleep(0.5)
+
+# mete todos os bits de seleção do 
+def mux_off():
+    # desligar a saida
+    GPIO.output(27, 0)       #bit0 - set port/pin value to 1/GPIO.HIGH/True  
+    GPIO.output(7, 0)        #bit1 - set port/pin value to 1/GPIO.HIGH/True  
+    GPIO.output(5, 0)        #bit2 - set port/pin value to 1/GPIO.HIGH/True 
+
+# inicialização dos servos - mete todos na horizontal
 def servo_init():
-    servo1.mid() 
-    servo2.mid() 
-    servo3.mid() 
-    servo4.mid() 
-    servo5.mid() 
-    servo6.mid() 
-    servo7.mid() 
-    servo8.mid() 
+    mux_escolher_saida(1)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[0]) # centre
+    sleep(1)
+    mux_off()
 
-def teste_servos():
-    while True:
-        rotate_servo(1, "right")
-        sleep(4)
-        rotate_servo(1, "right")
-        sleep(4)
-        rotate_servo(1, "right")
-        sleep(4)
-        rotate_servo(1, "right")
-        sleep(4)
-        rotate_servo(1, "left")
-        sleep(4)
-        rotate_servo(1, "left")
-        sleep(4)
-        rotate_servo(1, "left")
-        sleep(4)
-        rotate_servo(1, "left")
-        sleep(4)
+    mux_escolher_saida(2)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[1]) # centre
+    sleep(1)
+    mux_off()
 
-    rotate_servo(2, "left")
-    sleep(4)
-    rotate_servo(2, "right")
-    sleep(4)
+    mux_escolher_saida(3)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[2]) # centre
+    sleep(1)
+    mux_off()
 
-    rotate_servo(3, "left")
-    sleep(4)
-    rotate_servo(3, "right")
-    sleep(4)
+    mux_escolher_saida(4)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[3]) # centre
+    sleep(1)
+    mux_off()
 
-    rotate_servo(4, "left")
-    sleep(4)
+    mux_escolher_saida(5)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[4]) # centre
+    sleep(1)
+    mux_off()
 
-    rotate_servo(5, "left")
-    sleep(4)
-    rotate_servo(5, "right")
-    sleep(4)
+    # mux_escolher_saida(6)
+    # pi.set_servo_pulsewidth(12, servo_pwm_center[5]) # centre
+    # sleep(1)
+    # mux_off()
 
-    rotate_servo(6, "left")
-    sleep(4)
-    rotate_servo(6, "right")
-    sleep(4)
+    mux_escolher_saida(7)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[6]) # centre
+    sleep(1)
+    mux_off()
 
-    rotate_servo(7, "left")
-    sleep(4)
-    rotate_servo(7, "right")
-    sleep(4)
+    mux_escolher_saida(8)
+    pi.set_servo_pulsewidth(12, servo_pwm_center[7]) # centre
+    sleep(1)
+    mux_off()
 
-    rotate_servo(8, "left")
-    sleep(4)
-    rotate_servo(8, "right")
-
+# movimenta os servos de forma a guardar a chave no sitio certo
+def store_key(key_number):
+    if key_number < 1 or key_number > 4:
+        print(f"ERRO: you can not store {key_number} key. key is 1,2,3 or 4")
+        return
     
-    
-    
-    
-    
-    
+    rotate_servo("right", 8)
+    rotate_servo("left and stay", 8)
 
+    if key_number < 3:
+        rotate_servo("left", 7)
+        if key_number == 1:
+            rotate_servo("left", 5)
+        else:
+            rotate_servo("right", 5)
+    else:
+        rotate_servo("right", 7)
+        if key_number == 3:
+            rotate_servo("left", 6)
+        else:
+            rotate_servo("right", 6)
 
-## função que vai tratar da disponibilização de uma chave
-def open_gate(key_number):
+    if DEBUG == 1:
+        print(f"\t[DEBUG]key_{key_number} was stored")
 
+#
+def give_key(key_number):
     if key_number < 1 or key_number > 4:
         print(f"ERRO: you can dispense {key_number} key. key is 1,2,3 or 4")
         return
     
-    
-    rotate_servo(key_number, servos_direc_default[key_number])
-
-    lcd.message('key dispensed')
-    sleep(2)
-    lcd.clear()
+    rotate_servo(servos_return_default[key_number - 1], key_number)    
 
 
-def strore_key(key_number):
-
-    if key_number < 1 or key_number > 4:
-        print(f"ERRO: you can store {key_number} key. key is 1,2,3 or 4")
-        return
-
-    rotate_servo(8, "right")
-
-    if key_number < 3:
-        rotate_servo(7, "left")
-        if key_number == 1:
-            rotate_servo(5, "left")
-        else:
-            rotate_servo(5, "right")
-    else:
-        rotate_servo(7, "right")
-        if key_number == 3:
-            rotate_servo(6, "left")
-        else:
-            rotate_servo(6, "right")
-
-    if DEBUG == 1:
-        print(f"\t[DEBUG]key_{key_number} was stored")
-    
 
 
-def rotate_servo(servo_number, direction):
-
-    if DEBUG == 1:
-        print(f"\t[DEBUG]Servo {servo_number} rotated to {direction}!!")
-
-    if servo_number == 1:
-        if direction == "right":
-            servo1.min()
-            sleep(2)
-            servo1.mid()
-            return
-        elif direction == "left":
-            servo1.max()
-            sleep(2)
-            servo1.mid()
-            return
-    if servo_number == 2:
-        if direction == "right":
-            servo2.min()
-            sleep(2)
-            servo2.mid()
-            return
-        elif direction == "left":
-            servo2.max()
-            sleep(2)
-            servo2.mid()
-            return
-    if servo_number == 3:
-        if direction == "right":
-            servo3.min()
-            sleep(2)
-            servo3.mid()
-            return
-        elif direction == "left":
-            servo3.max()
-            sleep(2)
-            servo3.mid()
-            return
-    if servo_number == 4:
-        if direction == "right":
-            servo4.min()
-            sleep(2)
-            servo4.mid()
-            return
-        elif direction == "left":
-            servo4.max()
-            sleep(2)
-            servo4.mid()
-            return
-    if servo_number == 5:
-        if direction == "right":
-            servo5.min()
-            sleep(2)
-            servo5.mid()
-            return
-        elif direction == "left":
-            servo5.max()
-            sleep(2)
-            servo5.mid()
-            return
-    if servo_number == 6:
-        if direction == "right":
-            servo6.min()
-            sleep(2)
-            servo6.mid()
-            return
-        elif direction == "left":
-            servo6.max()
-            sleep(2)
-            servo6.mid()
-            return
-    if servo_number == 7:
-        if direction == "right":
-            servo7.min()
-            sleep(2)
-            servo7.mid()
-            return
-        elif direction == "left":
-            servo7.max()
-            sleep(2)
-            servo7.mid()
-            return
-    if servo_number == 8:
-        if direction == "right":
-            servo8.min()
-            sleep(2)
-            servo8.mid()
-            return
-        elif direction == "left":
-            servo8.max()
-            sleep(2)
-            servo8.mid()
-            return
