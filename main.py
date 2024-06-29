@@ -43,15 +43,15 @@ def teste_hardware():
     print("[LCD]LCD teste")
     lcd_test()
 
-    lcd.clear()
-    lcd.message('teste do teclado')
-    print("[LCD]teste do teclado")
-    teste_valido = teste_teclado()
+    # lcd.clear()
+    # lcd.message('teste do teclado')
+    # print("[LCD]teste do teclado")
+    # teste_valido = teste_teclado()
 
-    lcd.clear()
-    lcd.message('teste do servos')
-    print("[LCD]teste do servos")
-    teste_servo_com_multiplexer()
+    # lcd.clear()
+    # lcd.message('teste do servos')
+    # print("[LCD]teste do servos")
+    # teste_servo_com_multiplexer()
 
     # falta o rfid mas é testado logo a seguir
 
@@ -317,8 +317,6 @@ try:
                         password = random.randint(1, 10000)
                         user_name = "default" + str(password)     # argumeto para a thread de registos
                         create_new_user(user_name, "default@gmail.com", card_id, password, False, False, False, False)
-                        thread_delete_after_10min = threading.Timer(600.0, delete_user, args= (user_name,password))
-                        thread_delete_after_10min.start()
 
                         lcd.clear()
                         lcd.message('Key:\n')
@@ -326,7 +324,7 @@ try:
                         #password_text = split_integer_to_list(password)
                         lcd.message(str(password))
                         print(f"[LCD]{str(password)}")
-                        sleep(15)
+                        sleep(30)
                         lcd.clear()
 
                         loop_flag = 0
