@@ -51,7 +51,7 @@ def teste_hardware():
     lcd.clear()
     lcd.message('teste do servos')
     print("[LCD]teste do servos")
-    # teste_servo_com_multiplexer()
+    teste_servo_com_multiplexer()
 
     # falta o rfid mas é testado logo a seguir
 
@@ -213,7 +213,7 @@ try:
                     print(f"[LCD]Request[red]")
                     # timeout thread
                     while_timer = 1
-                    thread_stop_after_1min = threading.Timer(60.0, timer)
+                    thread_stop_after_1min = threading.Timer(20.0, timer)
                     thread_stop_after_1min.start()
 
                     while(1):
@@ -236,7 +236,7 @@ try:
 
                                  # timeout thread
                                 while_timer = 1
-                                thread_stop_after_1min = threading.Timer(60.0, timer)
+                                thread_stop_after_1min = threading.Timer(45.0, timer)
                                 thread_stop_after_1min.start()
 
                                 key_readed = read_pins_from_arduino()
@@ -246,6 +246,9 @@ try:
                                     print("[LCD]Timeout")
                                     sleep(2)
                                     lcd.clear()
+
+                                    rotate_servo("left and stay", 8) # o servo 8 é o lixo. quando não começou o processo de entrgua de chaves manda tudo para o lixo
+
                                     loop_flag = 0
                                     break
 
@@ -277,6 +280,15 @@ try:
 
                                 loop_flag = 3
                                 break
+                        if while_timer == 0:
+                            lcd.clear()
+                            lcd.message('Timeout')
+                            print("[LCD]time out")
+                            sleep(2)
+                            lcd.clear()
+                                
+
+                            loop_flag = 0
 
 
                 else:
@@ -287,7 +299,7 @@ try:
         if loop_flag == 2:
             # timeout thread
             while_timer = 1
-            thread_stop_after_1min = threading.Timer(60.0, timer)
+            thread_stop_after_1min = threading.Timer(30.0, timer)
             thread_stop_after_1min.start()
 
             while(1):

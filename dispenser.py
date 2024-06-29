@@ -50,11 +50,11 @@ def rotate_servo(direction, servo):
         print(f"rotate centre servo_{servo_og}")
         sleep(2)
     elif direction == "left and stay":
-        pi.set_servo_pulsewidth(12, 2000) # centre
+        pi.set_servo_pulsewidth(12, 2000) # safe clockwise
         print(f"rotate left and stay servo_{servo_og}")
         sleep(2)
     elif direction == "right and stay":
-        pi.set_servo_pulsewidth(12, 1000) # centre
+        pi.set_servo_pulsewidth(12, 1000) # safe anti-clockwise
         print(f"rotate right and stay servo_{servo_og}")
         sleep(2)
 
